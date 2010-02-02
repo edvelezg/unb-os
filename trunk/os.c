@@ -1,9 +1,10 @@
 /**
  * Notes: 
  * Stack pointer address: 512*i - x 
- * 
- * @author Viper (1/31/2010)
  */
+
+char Memory[MAXPROCESS*WORKSPACE];
+
 struct PCB 
 {
     //What is a Process Control Block
@@ -13,8 +14,8 @@ struct PCB
     //info, I/O status info
     int level;
     int state;
-    int PC;
     int *stackPointer; // Memory-management info;
+	function pointer to function;
     stack processStack
 //  scheduling info
 
@@ -24,6 +25,7 @@ struct PCB
 // main() can then create processes and initialize the PPP[] and PPPMax[] arrays
 int main (int argc, char *argv[])
 {
+	
     /**
      *   The PPP[] array is a sequence of names which specifies the execution
      *   order of all PERIODIC processes. The name of every PERIODIC
@@ -53,8 +55,9 @@ int main (int argc, char *argv[])
 /* OS Initialization */
 void OS_Init()
 {
-    char Memory[MAXPROCESS*WORKSPACE];
+    
     determine quantum
+	setup an interrupt to increment a timer
     enable interrupts
 
     extern int PPPLen;          /* length of PPP[] */
