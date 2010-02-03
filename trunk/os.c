@@ -14,10 +14,14 @@ struct PCB
     //info, I/O status info
     int level;
     int state;
+
+	// - within the PCB, you do not need a stack processStack. This is
+	// already there as the stackPointer.
     int *stackPointer; // Memory-management info;
-    function pointer to function;
-    stack processStack
-//  scheduling info
+	// - the "function pointer to function" is the program counter. Just an
+	// int is fine.
+	int programCounter;
+	//  scheduling info
 
 };
 
@@ -41,7 +45,6 @@ int main (int argc, char *argv[])
     //   Before the call to OS_Start(), the only calls that may be placed to the
     //   OS are OS_Create(), OS_InitSem(), and OS_InitFiFo().
     OS_Create();
-
     OS_Start();
     return 0;
 }
@@ -56,7 +59,7 @@ int main (int argc, char *argv[])
 void OS_Init()
 {
 
-    determine quantum
+    // determine quantum .. i can hardcode this value because I am using the same HW
     setup an interrupt to increment a timer
     enable interrupts
 
