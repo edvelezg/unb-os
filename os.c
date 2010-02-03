@@ -3,33 +3,41 @@
  * Stack pointer address: 512*i - x 
  */
 
-char Memory[MAXPROCESS*WORKSPACE];
+//char Memory[MAXPROCESS*WORKSPACE];
+//What are the different process states?
+//.. new, running, waiting, ready,
+//terminated.
+
+// WHAT IS THE DIAGRAM LIKE FOR THESE STATES?
+// Don't I need to know what function I"m pointing to with the PCB
+
+enum States
+{
+    NEW, RUNNING, WAITING, READY, TERMINATED
+};
 
 struct PCB 
 {
-    //What is a Process Control Block
-    //(PCB)?
-    //.. State, PC, registers, scheduling info,
-    //memory-management info, accounting
-    //info, I/O status info
     int level;
     int state;
-
-	// - within the PCB, you do not need a stack processStack. This is
-	// already there as the stackPointer.
+    int arg;
     int *stackPointer; // Memory-management info;
-	// - the "function pointer to function" is the program counter. Just an
-	// int is fine.
-	int programCounter;
-	//  scheduling info
+
+    // - the "function pointer to function" is the program counter. Just an
+    // int is fine ???????????????
+    int programCounter;
+    void (*function)(void);
+    //  scheduling info
 
 };
+
+struct PCB pcbArray[MAXPROCESS];
+
 
 
 // main() can then create processes and initialize the PPP[] and PPPMax[] arrays
 int main (int argc, char *argv[])
 {
-
     /**
      *   The PPP[] array is a sequence of names which specifies the execution
      *   order of all PERIODIC processes. The name of every PERIODIC
@@ -45,6 +53,8 @@ int main (int argc, char *argv[])
     //   Before the call to OS_Start(), the only calls that may be placed to the
     //   OS are OS_Create(), OS_InitSem(), and OS_InitFiFo().
     OS_Create();
+    OS_InitSem();
+    OS_InitFiFo();
     OS_Start();
     return 0;
 }
@@ -103,20 +113,36 @@ void OS_Abort()
 /* Process Management primitives */  
 PID  OS_Create(void (*f)(void), int arg, unsigned int level, unsigned int n)
 {
-    struct PCB p;  
     int myPID = INVALIDPID;
-
-    p.level = level;
-
+//  struct PCB p;
 //  Do I point to function f with a pointer?
 
     if ( level == PERIODIC )
     {
-        if ( n is taken )
+        if ( n is not taken )
         {
+            pcbArray[n].level = level;
+            pcbArray[n].state = READY;
+            pcbArray[n].stackPointer = memory location;
+            pcbArray[n].function = f;
+            pcbArray[n].programCounter = ;
+            pcbArray[n].arg = arg;
+
             return INVALIDPID;
         }
 
+    }
+    else if ( level == SPORADIC )
+    {
+        ...
+    }
+    else if ( level == DEVICE )
+    {
+        ...
+    }
+    else
+    {
+        ...
     }
     return myPID;
 }
@@ -131,6 +157,8 @@ void OS_Yield(void);
 
 int  OS_GetParam(void);  
 {
+    int retVal = 3;
+    return retVal;
 }
 
 /* Semaphore primitives */
@@ -184,5 +212,5 @@ void  OS_Write( FIFO f, int val )
  */  
 BOOL  OS_Read( FIFO f, int *val )
 {
-
+    return FALSE;
 }
