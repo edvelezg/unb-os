@@ -15,7 +15,7 @@ struct PCB
     int level;
     int state;
     int *stackPointer; // Memory-management info;
-	function pointer to function;
+    function pointer to function;
     stack processStack
 //  scheduling info
 
@@ -25,7 +25,7 @@ struct PCB
 // main() can then create processes and initialize the PPP[] and PPPMax[] arrays
 int main (int argc, char *argv[])
 {
-	
+
     /**
      *   The PPP[] array is a sequence of names which specifies the execution
      *   order of all PERIODIC processes. The name of every PERIODIC
@@ -55,9 +55,9 @@ int main (int argc, char *argv[])
 /* OS Initialization */
 void OS_Init()
 {
-    
+
     determine quantum
-	setup an interrupt to increment a timer
+    setup an interrupt to increment a timer
     enable interrupts
 
     extern int PPPLen;          /* length of PPP[] */
@@ -78,8 +78,8 @@ void OS_Start()
 run_process ()
 {
     disable interrupts.
-        save last process register values;
-        load next register values;
+    save last process register values;
+    load next register values;
     re-enable interrupts
 }
 void OS_Abort()
@@ -101,13 +101,13 @@ void OS_Abort()
 PID  OS_Create(void (*f)(void), int arg, unsigned int level, unsigned int n)
 {
     struct PCB p;  
-    int myPID;
+    int myPID = INVALIDPID;
 
     p.level = level;
 
 //  Do I point to function f with a pointer?
 
-    if ( level is PERIODIC )
+    if ( level == PERIODIC )
     {
         if ( n is taken )
         {
@@ -144,6 +144,42 @@ void OS_Signal(int s);
 }
 
 /* FIFO primitives */
-FIFO  OS_InitFiFo();
-void  OS_Write( FIFO f, int val );
-BOOL  OS_Read( FIFO f, int *val );
+
+/*
+ * INTERPROCESS COMMUNICATION:
+ *    FIFOs are first-in-first-out bounded buffers. Elements are read in the same
+ *    order as they were written. When writes overtake reads, the first unread
+ *    element will be dropped. Thus, ordering is always preserved.
+ *    "read" and "write" on FIFOs are atomic, i.e., they are indivisible, and
+ *    they are non-blocking. All FIFOs are of the same size. All data elements
+ *    are assumed to be unsigned int.
+ **  
+ */
+
+/**   Initialize a new FIFO and returns a FIFO descriptor. It
+ *    returns INVALIDFIFO when none is available.
+ */
+FIFO  OS_InitFiFo()
+{
+    FIFO fifo_id = INVALIDFIFO;
+    return fifo_id;
+}
+
+/**
+ *    Write a value "val" into the FIFO "f". A write always succeeds. When
+ *    a FIFO is full, the first unread element is dropped.
+ */
+void  OS_Write( FIFO f, int val )
+{
+}
+
+
+/**
+ *    Return the first unread element in "f" if it is unavailable. If the FIFO is
+ *    empty, it returns FALSE. Otherwise, it returns TRUE and the first
+ *    unread element is copied into "val".
+ */  
+BOOL  OS_Read( FIFO f, int *val )
+{
+
+}
