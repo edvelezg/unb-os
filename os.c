@@ -18,22 +18,17 @@ enum States
 
 struct PCB 
 {
-    int level;
-    int state;
-    int arg;
-    int *stackPointer; // Memory-management info;
-
-    // - the "function pointer to function" is the program counter. Just an
-    // int is fine ???????????????
-    int programCounter;
-    void (*function)(void);
-    //  scheduling info
-
+    PID     pid;
+    int     iLevel;
+    int     iState;
+    int     iArg; /* argument */
+    char    *pcSp; /* stack pointer */
+    int     iPc; /* program counter */
 };
 
-struct PCB pcbArray[MAXPROCESS];
+struct PCB asPCB[MAXPROCESS];
 
-
+char acWorkspaces[MAXPROCESS*WORKSPACE];
 
 // main() can then create processes and initialize the PPP[] and PPPMax[] arrays
 int main (int argc, char *argv[])
@@ -90,13 +85,14 @@ void OS_Start()
 
 run_process ()
 {
-    disable interrupts.
+    OS_DI(); /* disable all interrupts */
     save last process register values;
     load next register values;
-    re-enable interrupts
+    OS_EI(); /* enable all interrupts */  
 }
 void OS_Abort()
 {
+	asm(" stop "); /* what is this stop? */
 }
 
 
@@ -121,12 +117,11 @@ PID  OS_Create(void (*f)(void), int arg, unsigned int level, unsigned int n)
     {
         if ( n is not taken )
         {
-            pcbArray[n].level = level;
-            pcbArray[n].state = READY;
-            pcbArray[n].stackPointer = memory location;
-            pcbArray[n].function = f;
-            pcbArray[n].programCounter = ;
-            pcbArray[n].arg = arg;
+            asPCB[n].iLevel           = level;
+            asPCB[n].iState           = NEW;
+            asPCB[n].iArg             = arg;
+            asPCB[n].pcSp    = WORKSPACE*(i + 1) - 1;
+            asPCB[n].iPc  = f;
 
             return INVALIDPID;
         }
