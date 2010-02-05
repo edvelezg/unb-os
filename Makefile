@@ -27,8 +27,8 @@ COMMON_OBJ=$(OUTDIR)/main.o $(OUTDIR)/os.o
 OBJ=$(COMMON_OBJ) $(CFG_OBJ)
 ALL_OBJ=$(OUTDIR)/main.o $(OUTDIR)/os.o 
 
-COMPILE=g++ -c    -g -o "$(OUTDIR)/$(*F).o" $(CFG_INC) "$<"
-LINK=g++  -g -o "$(OUTFILE)" $(OBJ) $(CFG_LIB)
+COMPILE=/usr/bin/m6811-elf-gcc -g -Os -mshort -Wl,-m,m68hc11elfb -o main.elf "$(OUTDIR)/$(*F).o" $(CFG_INC) "$<"
+LINK=/usr/bin/m6811-elf-run  -g -o "$(OUTFILE)" $(OBJ) $(CFG_LIB)
 
 # Pattern rules
 $(OUTDIR)/%.o : %.c
@@ -68,8 +68,8 @@ COMMON_OBJ=$(OUTDIR)/main.o $(OUTDIR)/os.o
 OBJ=$(COMMON_OBJ) $(CFG_OBJ)
 ALL_OBJ=$(OUTDIR)/main.o $(OUTDIR)/os.o 
 
-COMPILE=g++ -c   -o "$(OUTDIR)/$(*F).o" $(CFG_INC) "$<"
-LINK=g++  -o "$(OUTFILE)" $(OBJ) $(CFG_LIB)
+COMPILE=/usr/bin/m6811-elf-run -c   -o "$(OUTDIR)/$(*F).o" $(CFG_INC) "$<"
+LINK=/usr/bin/m6811-elf-run  -o "$(OUTFILE)" $(OBJ) $(CFG_LIB)
 
 # Pattern rules
 $(OUTDIR)/%.o : %.c

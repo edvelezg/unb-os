@@ -1,5 +1,5 @@
-#include <stdlib.h>
 #include "os.h"
+#include <stdlib.h>
 /**
  * Notes: 
  * Stack pointer address: 512*i - x 
@@ -13,27 +13,29 @@
 // WHAT IS THE DIAGRAM LIKE FOR THESE STATES?
 // Don't I need to know what function I"m pointing to with the PCB
 
-enum states
-{
+//enum states { NEW, RUNNING, WAITING, READY, TERMINATED };
+typedef enum 
+{ 
     NEW, RUNNING, WAITING, READY, TERMINATED
-};
+} 
+STATES;
 
-struct pcb 
+typedef struct pcb 
 {
     PID         pid;
     int         level;
-    states      state;
+    STATES      state;
     int         arg; /* argument */
     char        *pcSp; /* stack pointer */
     int         pc; /* program counter */
     FIFO        fifo; /* message queue */
     int         frequency;
     BOOL        available; /* whether the PCB is taken by a process or not */
-};
+} PCB;
 
-struct pcb atProcesses[MAXPROCESS];
-struct pcb  tIdle;
-struct pcb* ptCurrent;
+PCB atProcesses[MAXPROCESS];
+PCB  tIdle;
+PCB* ptCurrent;
 
 int PPP[MAXPROCESS];           
 int PPPMax[MAXPROCESS];
@@ -85,8 +87,9 @@ void OS_Signal(int s)
 /* OS Initialization */
 void OS_Init(void)
 {
+	int i;
     /* Initialize PCBs */
-    for ( int i = 0; i < MAXPROCESS; ++i )
+    for ( i = 0; i < MAXPROCESS; ++i )
     {
         atProcesses[i].level           = PERIODIC;
         atProcesses[i].state           = NEW;
@@ -142,7 +145,7 @@ void context_switch (void)
 }
 void OS_Abort()
 {
-//  EXIT();
+	//EXIT();
 }
 
 
