@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include "os.h"
 /**
  * Notes: 
  * Stack pointer address: 512*i - x 
@@ -11,88 +13,136 @@
 // WHAT IS THE DIAGRAM LIKE FOR THESE STATES?
 // Don't I need to know what function I"m pointing to with the PCB
 
-enum States
+enum states
 {
     NEW, RUNNING, WAITING, READY, TERMINATED
 };
 
-struct PCB 
+struct pcb 
 {
-    PID     pid;
-    int     iLevel;
-    int     iState;
-    int     iArg; /* argument */
-    char    *pcSp; /* stack pointer */
-    int     iPc; /* program counter */
+    PID         pid;
+    int         level;
+    states      state;
+    int         arg; /* argument */
+    char        *pcSp; /* stack pointer */
+    int         pc; /* program counter */
+    FIFO        fifo; /* message queue */
+    int         frequency;
+    BOOL        available; /* whether the PCB is taken by a process or not */
 };
 
-struct PCB asPCB[MAXPROCESS];
+struct pcb atProcesses[MAXPROCESS];
+struct pcb  tIdle;
+struct pcb* ptCurrent;
+
+int PPP[MAXPROCESS];           
+int PPPMax[MAXPROCESS];
+int PPPLen;      
 
 char acWorkspaces[MAXPROCESS*WORKSPACE];
 
-// main() can then create processes and initialize the PPP[] and PPPMax[] arrays
-int main (int argc, char *argv[])
+
+void idle()
 {
-    /**
-     *   The PPP[] array is a sequence of names which specifies the execution
-     *   order of all PERIODIC processes. The name of every PERIODIC
-     *   process must appear in PPP[] array at least once, but may be more 
-     *   than once.
-     */
-    OS_Init();
-    PPP[] = {1, 2, 1, 3, 2, 3}
-    PPPMax[] = {3, 4, 5, 6, 7, 2}
-
-
-
-    //   Before the call to OS_Start(), the only calls that may be placed to the
-    //   OS are OS_Create(), OS_InitSem(), and OS_InitFiFo().
-    OS_Create();
-    OS_InitSem();
-    OS_InitFiFo();
-    OS_Start();
-    return 0;
+    while ( 1 );
 }
 
-//   void OS_Init(void)
-//   The function main() will be called first by crt11.s.  Before any calls
-//   can be placed to the OS, main() must call OS_Init() to initialize the OS.
-//   main() can then create processes and initialize the PPP[] and PPPMax[]
-//   arrays. To boot the OS, main() must call OS_Start() which never returns.
-//   Assumption: OS_Init() is called exactly once at boot time.
+void OS_Terminate(void)
+{
+}
+
+void OS_Yield(void)
+{
+}
+
+int  OS_GetParam(void)
+{
+    return ptCurrent->arg;
+}
+
+/* Semaphore primitives */
+void OS_InitSem(int s, int n)
+{
+}
+
+void OS_Wait(int s)
+{
+}
+
+void OS_Signal(int s)
+{
+}
+
+/** 
+ * The function main() will be called first by crt11.s.  Before
+ * any calls can be placed to the OS, main() must call OS_Init() to * 
+ * initialize the OS. * main() can then create processes and * 
+ * initialize the PPP[] and PPPMax[] * arrays. To boot the OS, * 
+ * main() must call OS_Start() which never returns. * Assumption: * 
+ * OS_Init() is called exactly once at boot time. * * 
+ */
+
 /* OS Initialization */
-void OS_Init()
+void OS_Init(void)
 {
-
-    // determine quantum .. i can hardcode this value because I am using the same HW
-    setup an interrupt to increment a timer
-    enable interrupts
-
-    extern int PPPLen;          /* length of PPP[] */
-    extern int PPP[];           /* PERIODIC process scheduling plan */
-    extern int PPPMax[];        /* max CPU in msec of each process in PPP */
-
-}
-void OS_Start()
-{
-    for ( int i = 0; i < PPPLen; ++i )
+    /* Initialize PCBs */
+    for ( int i = 0; i < MAXPROCESS; ++i )
     {
-        set_interrupt(PPPMax[i]);
-        run_process(PPP[i]);
+        atProcesses[i].level           = PERIODIC;
+        atProcesses[i].state           = NEW;
+        atProcesses[i].arg             = 0;
+        atProcesses[i].pcSp            = acWorkspaces + (WORKSPACE*i);
+        atProcesses[i].pc              = 0;
+        atProcesses[i].fifo            = INVALIDFIFO;
+        atProcesses[i].available       = TRUE;
     }
 
+    /**
+     * What if I have 17*WORKSPACE process instead, in which I count
+     * process 0 as the INVALIDPID -- idle process -- and it 
+     * represents the first block of all blocks.. I would then count 
+     * from 1 to MAXPROCESS 
+     *  
+     */
+    tIdle.level           = PERIODIC;
+    tIdle.state           = READY;
+    tIdle.arg             = 0;
+    tIdle.pcSp            = acWorkspaces + (WORKSPACE*0); /* dOES IT NEED A WORKSPACE?*/
+    tIdle.pc              = (int) &idle;
+    tIdle.fifo            = INVALIDFIFO;
+    tIdle.available       = FALSE;
+
+    //  determine quantum .. i can hardcode this value because I am using the same HW
+    //  setup an interrupt to increment a timer
+    //  enable interrupts
+}
+void OS_Start(void)
+{
+    /**
+     * If no task is running, and all tasks are not in the ready 
+     * state, the idle task executes 
+     * */ 
+
+    idle();
+
+//  for ( int i = 0; i < PPPLen; ++i )
+//  {
+//      set_interrupt(PPPMax[i]);
+//      context_switch(PPP[i]);
+//  }
+
 }
 
-run_process ()
+void context_switch (void)
 {
     OS_DI(); /* disable all interrupts */
-    save last process register values;
-    load next register values;
+//  save last process register values;
+//  load next register values;
     OS_EI(); /* enable all interrupts */  
 }
 void OS_Abort()
 {
-	asm(" stop "); /* what is this stop? */
+//  EXIT();
 }
 
 
@@ -109,69 +159,71 @@ void OS_Abort()
 /* Process Management primitives */  
 PID  OS_Create(void (*f)(void), int arg, unsigned int level, unsigned int n)
 {
-    int myPID = INVALIDPID;
-//  struct PCB p;
-//  Do I point to function f with a pointer?
-
+    int iPID = INVALIDPID;
     if ( level == PERIODIC )
     {
-        if ( n is not taken )
+        iPID = n;
+        if ( n < MAXPROCESS && atProcesses[iPID].available == TRUE )
         {
-            asPCB[n].iLevel           = level;
-            asPCB[n].iState           = NEW;
-            asPCB[n].iArg             = arg;
-            asPCB[n].pcSp    = WORKSPACE*(i + 1) - 1;
-            asPCB[n].iPc  = f;
-
-            return INVALIDPID;
+            /**
+             * Found the PID requested and it is available
+             */
+            atProcesses[iPID].level           = level;
+            atProcesses[iPID].state           = NEW;
+            atProcesses[iPID].arg             = arg;
+            atProcesses[iPID].pcSp            = acWorkspaces + (WORKSPACE*iPID);
+            atProcesses[iPID].pc              = (int) f;
+            atProcesses[iPID].fifo            = INVALIDFIFO;
+            atProcesses[iPID].available       = FALSE;
         }
-
+        else /* PID is already taken by another process. */
+        {
+            iPID = INVALIDPID;
+        }
     }
-    else if ( level == SPORADIC )
+    else if ( level == SPORADIC || level == DEVICE )
     {
-        ...
+        for ( iPID = 0; iPID < MAXPROCESS; ++iPID )
+        {
+            if ( atProcesses[iPID].available == TRUE )
+            {
+                atProcesses[iPID].level           = level;
+                atProcesses[iPID].state           = NEW;
+                atProcesses[iPID].arg             = arg;
+                atProcesses[iPID].pcSp             = acWorkspaces + (WORKSPACE*atProcesses[iPID].pid);
+                atProcesses[iPID].pc              = (int) f;
+                atProcesses[iPID].fifo             = INVALIDFIFO;
+                atProcesses[iPID].available        = FALSE;
+
+                if ( level == SPORADIC )
+                {
+                    atProcesses[iPID].frequency = n;
+                    // put in sporadic queue
+                }
+                else if ( level == DEVICE )
+                {
+                    // put in device queue
+                }
+            }
+        }
+        /**
+         * No free PCB was found.
+         */
+        if ( iPID >= MAXPROCESS )
+        {
+            iPID = INVALIDPID;
+        }
     }
-    else if ( level == DEVICE )
+    else /* An invalid level was specified*/
     {
-        ...
+        OS_Abort();
     }
-    else
-    {
-        ...
-    }
-    return myPID;
-}
-
-void OS_Terminate(void);    
-{
-}
-
-void OS_Yield(void);
-{
-}
-
-int  OS_GetParam(void);  
-{
-    int retVal = 3;
-    return retVal;
-}
-
-/* Semaphore primitives */
-void OS_InitSem(int s, int n);
-{
-}
-
-void OS_Wait(int s);
-{
-}
-
-void OS_Signal(int s);
-{
+    return iPID;
 }
 
 /* FIFO primitives */
 
-/*
+/**
  * INTERPROCESS COMMUNICATION:
  *    FIFOs are first-in-first-out bounded buffers. Elements are read in the same
  *    order as they were written. When writes overtake reads, the first unread
@@ -179,7 +231,6 @@ void OS_Signal(int s);
  *    "read" and "write" on FIFOs are atomic, i.e., they are indivisible, and
  *    they are non-blocking. All FIFOs are of the same size. All data elements
  *    are assumed to be unsigned int.
- **  
  */
 
 /**   Initialize a new FIFO and returns a FIFO descriptor. It
