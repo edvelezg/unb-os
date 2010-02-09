@@ -30,15 +30,15 @@ int main (int argc, char *argv[])
 
 
 
-   __asm__ __volatile__(
-                      "   ldaa %0 \n"
-					  "   ldab %1 \n"
-					  "	  aba   \n"
-					  "   staa %0 \n"
-                      : "=m"  (my_var)
-                      : "m"  (my_int), "m" (my_var)
-                      : "a", "b"                         /* no clobber-list */
-                      );
+// __asm__ __volatile__(
+//                    "ldaa      %0\n"
+//  				  "ldab      %1\n"
+//  				  "aba         \n"
+//  				  "staa      %0\n"
+//                    : "=m"  (my_var)
+//                    : "m"  (my_int), "m" (my_var)
+//                    : "a", "b"                         /* no clobber-list */
+//                    );
 
    //print("%d", my_int);
    //OS_Start();

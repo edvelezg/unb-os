@@ -1,65 +1,91 @@
+/*******************************************************************
+*
+*    DESCRIPTION: This is a kernel for a robot.
+*    AUTHOR: Eduardo Gutarra Velez.
+*    DATE: 2/19/2010
+*
+*******************************************************************/
+
 #include "os.h"
+#include "interrupts.h"
+#include "fifo.h"
 #include <stdlib.h>
-/**
- * Notes: 
- * Stack pointer address: 512*i - x 
- */
 
-//char Memory[MAXPROCESS*WORKSPACE];
-//What are the different process states?
-//.. new, running, waiting, ready,
-//terminated.
-
-// WHAT IS THE DIAGRAM LIKE FOR THESE STATES?
-// Don't I need to know what function I"m pointing to with the PCB
-
-//enum states { NEW, RUNNING, WAITING, READY, TERMINATED };
 typedef enum 
-{ 
+{
     NEW, RUNNING, WAITING, READY, TERMINATED
 } 
-STATES;
+States;
 
-typedef struct pcb 
+typedef struct pcb_struct 
 {
     PID         pid;
     int         level;
-    STATES      state;
-    int         arg; /* argument */
-    char        *pcSp; /* stack pointer */
+    States      state;
+    int         argument; /* argument */
+    char        *sp; /* stack pointer */
     int         pc; /* program counter */
     FIFO        fifo; /* message queue */
     int         frequency;
-    BOOL        available; /* whether the PCB is taken by a process or not */
-} PCB;
+    int         name;
+} ProcCtrlBlock;
 
-PCB atProcesses[MAXPROCESS];
-PCB  tIdle;
-PCB* ptCurrent;
+typedef struct ProcQueue
+{
+    ProcCtrlBlock*  procRefs[MAXPROCESS];  /* message circular buffer */
+    int             fillCount;         /* keeps track of the number of items */          
+    int             next;              /* next spot to write in */
+    int             first;             /* first element to read */
+
+} ProcQueue;
+
+
+ProcQueue devProcs;
+ProcQueue spoProcs;
+
+ProcCtrlBlock  arrProcs[MAXPROCESS];
+ProcCtrlBlock  idleProc;
+ProcCtrlBlock* currProc;
 
 int PPP[MAXPROCESS];           
 int PPPMax[MAXPROCESS];
-int PPPLen;      
+int PPPLen;
+
+static int schedIdx;
 
 char acWorkspaces[MAXPROCESS*WORKSPACE];
 
-
 void idle()
 {
-    while ( 1 );
+//  printf("idle %d \n", -1);
 }
 
-void OS_Terminate(void)
+
+void idle0()
 {
+//  printf("idle %d \n", 0);
 }
+
+
+void idle1()
+{
+//  {
+//  printf("idle %d \n", 1);
+//  }
+}
+
+void Enqueue(ProcQueue* prq, ProcCtrlBlock* p);
+BOOL Dequeue(ProcQueue *prq, ProcCtrlBlock** p);
+void InitQueues();
 
 void OS_Yield(void)
 {
+    /* trigger a context switch */
 }
 
 int  OS_GetParam(void)
 {
-    return ptCurrent->arg;
+    return currProc->argument;
 }
 
 /* Semaphore primitives */
@@ -67,57 +93,41 @@ void OS_InitSem(int s, int n)
 {
 }
 
+
 void OS_Wait(int s)
 {
 }
+
 
 void OS_Signal(int s)
 {
 }
 
-/** 
- * The function main() will be called first by crt11.s.  Before
- * any calls can be placed to the OS, main() must call OS_Init() to * 
- * initialize the OS. * main() can then create processes and * 
- * initialize the PPP[] and PPPMax[] * arrays. To boot the OS, * 
- * main() must call OS_Start() which never returns. * Assumption: * 
- * OS_Init() is called exactly once at boot time. * * 
- */
-
 /* OS Initialization */
 void OS_Init(void)
 {
-	int i;
+    int i;
     /* Initialize PCBs */
     for ( i = 0; i < MAXPROCESS; ++i )
     {
-        atProcesses[i].level           = PERIODIC;
-        atProcesses[i].state           = NEW;
-        atProcesses[i].arg             = 0;
-        atProcesses[i].pcSp            = acWorkspaces + (WORKSPACE*i);
-        atProcesses[i].pc              = 0;
-        atProcesses[i].fifo            = INVALIDFIFO;
-        atProcesses[i].available       = TRUE;
+        arrProcs[i].pid          = i + 1;
+        arrProcs[i].level        = -1;
+        arrProcs[i].state        = TERMINATED;
+        arrProcs[i].argument     = 0;
+        arrProcs[i].pc           = 0;
     }
 
-    /**
-     * What if I have 17*WORKSPACE process instead, in which I count
-     * process 0 as the INVALIDPID -- idle process -- and it 
-     * represents the first block of all blocks.. I would then count 
-     * from 1 to MAXPROCESS 
-     *  
-     */
-    tIdle.level           = PERIODIC;
-    tIdle.state           = READY;
-    tIdle.arg             = 0;
-    tIdle.pcSp            = acWorkspaces + (WORKSPACE*0); /* dOES IT NEED A WORKSPACE?*/
-    tIdle.pc              = (int) &idle;
-    tIdle.fifo            = INVALIDFIFO;
-    tIdle.available       = FALSE;
+    /* Initialize idle process */
+    idleProc.level     = PERIODIC;
+    idleProc.state     = READY;
+    idleProc.argument  = 0;
+    /* TODO: does it need a workspace?*/
+    idleProc.pc        = (int) &idle;
 
-    //  determine quantum .. i can hardcode this value because I am using the same HW
-    //  setup an interrupt to increment a timer
-    //  enable interrupts
+    InitQueues();
+    /* TODO: determine quantum I can hardcore that */
+    /* TODO: use the same hw setup interrupt ot increment a timer */
+    /* TODO: enable interrupts? */
 }
 void OS_Start(void)
 {
@@ -128,138 +138,207 @@ void OS_Start(void)
 
     idle();
 
+}
+
+void context_switch (void)
+{
+    OS_DI(); /* disable all interrupts */
+
+    OS_EI(); /* enable all interrupts */  
+}
+void OS_Abort()
+{
+    //EXIT();
+}
+
+PID  OS_Create(void (*f)(void), int arg, unsigned int level, unsigned int n)
+{
+    int idx, pid = INVALIDPID;
+
+    if ( level == PERIODIC ) /* Checking if a name n is already taken. */
+    {
+        for ( idx = 0; idx < MAXPROCESS; ++idx )
+        {
+            if ( arrProcs[idx].name == n )
+            {
+                return INVALIDPID;
+            }
+        }
+    }
+    for ( idx = 0; idx < MAXPROCESS; ++idx ) /* Searching an available block */
+    {
+        pid = arrProcs[idx].pid;
+        if ( arrProcs[idx].state == TERMINATED )
+        {
+            arrProcs[idx].level       = level;
+            arrProcs[idx].state       = NEW;
+            arrProcs[idx].argument    = arg;
+            arrProcs[idx].sp          = acWorkspaces + (WORKSPACE*idx);
+            arrProcs[idx].pc          = (int) f;
+
+            switch ( level )
+            {
+            case SPORADIC:
+                Enqueue(&spoProcs, &arrProcs[idx]);
+                break;
+            case DEVICE:
+                Enqueue(&devProcs, &arrProcs[idx]);
+                arrProcs[idx].frequency = n;
+                break;
+            case PERIODIC:
+                arrProcs[idx].name = n;
+                break;
+            default:
+                OS_Abort();
+            }
+            return pid;
+        }
+    }
+    return INVALIDPID;
+}
+
+void OS_Terminate(void)
+{
+    currProc->state = TERMINATED;
+    currProc->name = -1;
+    currProc->frequency = 0;
+
+    if ( currProc->level == SPORADIC )
+    {
+        /* TODO: remove from sporadic queue */
+    }
+    else if ( currProc->level == DEVICE )
+    {
+        /* TODO: remove from device queue */
+    }
+    /* TODO: need a context switch */
+}
+
+void OS_Schedule(void)
+{
+
 //  for ( int i = 0; i < PPPLen; ++i )
 //  {
 //      set_interrupt(PPPMax[i]);
 //      context_switch(PPP[i]);
 //  }
 
-}
-
-void context_switch (void)
-{
-    OS_DI(); /* disable all interrupts */
-//  save last process register values;
-//  load next register values;
-    OS_EI(); /* enable all interrupts */  
-}
-void OS_Abort()
-{
-	//EXIT();
-}
-
-
-//   A new process "p" is created to execute the parameterless
-//   function "f" with an initial parameter "arg", which is retrieved
-//   by a call to OS_GetParam().  If a new process cannot be
-//   allocated, INVALIDPID is returned; otherwise, p's PID is
-//   returned.  The created process will belong to scheduling "level",
-//   which is DEVICE, SPORADIC or PERIODIC. If the process is PERIODIC, then
-//   the "n" is a user-specified index (from 0 to MAXPROCESS-1) to be used
-//   in the PPP[] array to specify its execution order.
-//   Assumption: If "level" is SPORADIC, then "n" is ignored. If "level"
-//   is DEVICE, then "n" is its rate.
-/* Process Management primitives */  
-PID  OS_Create(void (*f)(void), int arg, unsigned int level, unsigned int n)
-{
-    int iPID = INVALIDPID;
-    if ( level == PERIODIC )
+    /* scheduler is the */
+    int i;
+    for ( i = 0; i < MAXPROCESS; i++ )
     {
-        iPID = n;
-        if ( n < MAXPROCESS && atProcesses[iPID].available == TRUE )
+        if ( arrProcs[i].name == PPP[schedIdx] )
         {
-            /**
-             * Found the PID requested and it is available
-             */
-            atProcesses[iPID].level           = level;
-            atProcesses[iPID].state           = NEW;
-            atProcesses[iPID].arg             = arg;
-            atProcesses[iPID].pcSp            = acWorkspaces + (WORKSPACE*iPID);
-            atProcesses[iPID].pc              = (int) f;
-            atProcesses[iPID].fifo            = INVALIDFIFO;
-            atProcesses[iPID].available       = FALSE;
-        }
-        else /* PID is already taken by another process. */
-        {
-            iPID = INVALIDPID;
+            currProc = &arrProcs[i];
+            break;
         }
     }
-    else if ( level == SPORADIC || level == DEVICE )
+
+    if ( schedIdx == PPPLen - 1 )
     {
-        for ( iPID = 0; iPID < MAXPROCESS; ++iPID )
-        {
-            if ( atProcesses[iPID].available == TRUE )
-            {
-                atProcesses[iPID].level           = level;
-                atProcesses[iPID].state           = NEW;
-                atProcesses[iPID].arg             = arg;
-                atProcesses[iPID].pcSp             = acWorkspaces + (WORKSPACE*atProcesses[iPID].pid);
-                atProcesses[iPID].pc              = (int) f;
-                atProcesses[iPID].fifo             = INVALIDFIFO;
-                atProcesses[iPID].available        = FALSE;
-
-                if ( level == SPORADIC )
-                {
-                    atProcesses[iPID].frequency = n;
-                    // put in sporadic queue
-                }
-                else if ( level == DEVICE )
-                {
-                    // put in device queue
-                }
-            }
-        }
-        /**
-         * No free PCB was found.
-         */
-        if ( iPID >= MAXPROCESS )
-        {
-            iPID = INVALIDPID;
-        }
+        schedIdx = 0;
     }
-    else /* An invalid level was specified*/
+    else
     {
-        OS_Abort();
+        ++schedIdx;
     }
-    return iPID;
 }
 
-/* FIFO primitives */
-
-/**
- * INTERPROCESS COMMUNICATION:
- *    FIFOs are first-in-first-out bounded buffers. Elements are read in the same
- *    order as they were written. When writes overtake reads, the first unread
- *    element will be dropped. Thus, ordering is always preserved.
- *    "read" and "write" on FIFOs are atomic, i.e., they are indivisible, and
- *    they are non-blocking. All FIFOs are of the same size. All data elements
- *    are assumed to be unsigned int.
- */
-
-/**   Initialize a new FIFO and returns a FIFO descriptor. It
- *    returns INVALIDFIFO when none is available.
- */
-FIFO  OS_InitFiFo()
+void Enqueue(ProcQueue* prq, ProcCtrlBlock* p)
 {
-    FIFO fifo_id = INVALIDFIFO;
-    return fifo_id;
+    /* the queue still has space to write
+       if it is full writes are ignored */
+    if ( prq->fillCount < MAXPROCESS )
+    {
+        prq->procRefs[prq->next] = p;
+        prq->next = (prq->next + 1) % MAXPROCESS;
+    }
+
+    /* increment fillcount if not full */
+    prq->fillCount = (prq->fillCount == MAXPROCESS) ? MAXPROCESS : ++prq->fillCount;
 }
 
-/**
- *    Write a value "val" into the FIFO "f". A write always succeeds. When
- *    a FIFO is full, the first unread element is dropped.
- */
-void  OS_Write( FIFO f, int val )
+BOOL Dequeue(ProcQueue *prq, ProcCtrlBlock** p)
 {
+    /* The queue is empty */
+    if ( prq->fillCount <= 0 )
+    {
+        return FALSE;
+    }
+    /* there are still elements in the queue */
+    else
+    {
+        *p = prq->procRefs[prq->first];
+        prq->first = (prq->first + 1) % MAXPROCESS;
+        prq->fillCount--;
+        return TRUE;
+    }
 }
 
-
-/**
- *    Return the first unread element in "f" if it is unavailable. If the FIFO is
- *    empty, it returns FALSE. Otherwise, it returns TRUE and the first
- *    unread element is copied into "val".
- */  
-BOOL  OS_Read( FIFO f, int *val )
+void InitQueues()
 {
-    return FALSE;
+    devProcs.fillCount = 0;
+    devProcs.next = 0;
+    devProcs.first = 0;
+
+    spoProcs.fillCount = 0;  
+    spoProcs.next = 0;       
+    spoProcs.first = 0;      
+}
+ 
+ 
+ 
+FIFO OS_InitFiFo()
+{
+    /* gets next available fifo */
+    if ( numFifos < MAXFIFO )
+    {
+        arrFifos[numFifos].fillCount = 0;
+        arrFifos[numFifos].next = 0;
+        arrFifos[numFifos].first = 0;
+        ++numFifos;
+        return numFifos;
+    }
+    else
+    {
+        /* ran out of fifos */
+        return INVALIDFIFO;
+    }
+}
+
+void OS_Write(FIFO f, int val)
+{
+    int idx = f - 1;
+    fifo_struct *curFifo = &arrFifos[idx];
+
+    /* the buffer still has space to write
+       if it is full writes are ignored */
+    if ( curFifo->fillCount < FIFOSIZE )
+    {
+        curFifo->buffer[curFifo->next] = val;
+        curFifo->next = (curFifo->next + 1) % FIFOSIZE;
+    }
+
+    /* increment fillcount if not full */
+    curFifo->fillCount = (curFifo->fillCount == FIFOSIZE) ? FIFOSIZE : ++curFifo->fillCount;
+}
+
+BOOL OS_Read(FIFO f, int *val)
+{
+    int idx = f - 1;
+    fifo_struct *curFifo = &arrFifos[idx];
+
+    /* the buffer is empty */
+    if ( curFifo->fillCount <= 0 )
+    {
+        return FALSE;
+    }
+    /* there are still elements in the buffer */
+    else
+    {
+        *val = curFifo->buffer[curFifo->first];
+        curFifo->first = (curFifo->first + 1) % FIFOSIZE;
+        curFifo->fillCount--;
+        return TRUE;
+    }
 }
