@@ -31,19 +31,6 @@ int main (int argc, char *argv[])
     /* scheduling plan */
 //  PPP[] = {IDLE, 1};
 //  PPPMax[] = {3, 3};
-    for ( i = 8 ; i >= -8 ; --i )
-    {
-        inter = i;
-//      printf("i: %d \n", inter);
-        if ( inter++ < 0 )
-        {
-            printf("first: %d \n", inter );
-        }
-    }
-
-
-
-
 
 // __asm__ __volatile__(
 //                    "ldaa      %0\n"
