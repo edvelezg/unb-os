@@ -203,13 +203,39 @@ void OS_Terminate(void)
     currProc->name = -1;
     currProc->frequency = 0;
 
+    ProcCtrlBlock *p0;
+    BOOL found = FALSE;
     if ( currProc->level == SPORADIC )
     {
-        /* TODO: remove from sporadic queue */
+        while ( found == FALSE  && Dequeue(&spoProcs, &p0) == TRUE )
+        {
+            if ( p0 == currProc )
+            {
+                /* if found dequeuing removes it */
+                found = TRUE;
+            }
+            else
+            {
+                /* if not found put it back in the queue*/
+                Enqueue(&spoProcs, p0);
+            }
+        }
     }
     else if ( currProc->level == DEVICE )
     {
-        /* TODO: remove from device queue */
+        while ( found == FALSE  && Dequeue(&devProcs, &p0) == TRUE )
+        {
+            if ( p0 == currProc )
+            {
+                /* if found dequeuing removes it */
+                found = TRUE;
+            }
+            else
+            {
+                /* if not found put it back in the queue*/
+                Enqueue(&devProcs, p0);
+            }
+        }
     }
     /* TODO: need a context switch */
 }
@@ -277,10 +303,12 @@ BOOL Dequeue(ProcQueue *prq, ProcCtrlBlock** p)
 
 void InitQueues()
 {
+    /* device processes queue */
     devProcs.fillCount = 0;
     devProcs.next = 0;
     devProcs.first = 0;
 
+    /* sporadic processes queue */
     spoProcs.fillCount = 0;  
     spoProcs.next = 0;       
     spoProcs.first = 0;      
