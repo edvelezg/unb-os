@@ -87,7 +87,6 @@ void sys_print_lcd(char* text) {
 		text++;
 		i++;
 	}
-	
 }
 
 static void _sys_send_command_lcd(void) {
