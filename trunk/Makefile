@@ -1,8 +1,3 @@
-# Makefile for hc12-elf-gcc.
-# Hugo Vincent, 29 May 2004, GPL.
-# Based on analysis of build environment for GEL, and modified
-# to suit the Axiom CME12B32.
-
 #Tools - definitions of toolchain setup.
 CC=C:/usr/bin/m6811-elf-gcc
 CFLAGS=-g -Os -mshort -Wl,-m,m68hc11elfb -I. #old: CFLAGS+=-fomit-frame-pointer
