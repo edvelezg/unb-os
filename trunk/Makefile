@@ -23,12 +23,14 @@ OUTFILE=$(OUTDIR)/unb-os.exe
 CFG_INC=
 CFG_LIB=
 CFG_OBJ=
-COMMON_OBJ=$(OUTDIR)/fifo.o $(OUTDIR)/main.o $(OUTDIR)/os.o 
+COMMON_OBJ=$(OUTDIR)/fifo.o $(OUTDIR)/interrupts.o $(OUTDIR)/main.o \
+	$(OUTDIR)/os.o 
 OBJ=$(COMMON_OBJ) $(CFG_OBJ)
-ALL_OBJ=$(OUTDIR)/fifo.o $(OUTDIR)/main.o $(OUTDIR)/os.o 
+ALL_OBJ=$(OUTDIR)/fifo.o $(OUTDIR)/interrupts.o $(OUTDIR)/main.o \
+	$(OUTDIR)/os.o 
 
-COMPILE=g++ -c    -g -o "$(OUTDIR)/$(*F).o" $(CFG_INC) "$<"
-LINK=g++  -g -o "$(OUTFILE)" $(OBJ) $(CFG_LIB)
+COMPILE=gcc -c    -g -o "$(OUTDIR)/$(*F).o" $(CFG_INC) "$<"
+LINK=gcc  -g -o "$(OUTFILE)" $(OBJ) $(CFG_LIB)
 
 # Pattern rules
 $(OUTDIR)/%.o : %.c
@@ -64,12 +66,14 @@ OUTFILE=$(OUTDIR)/unb-os.exe
 CFG_INC=
 CFG_LIB=
 CFG_OBJ=
-COMMON_OBJ=$(OUTDIR)/fifo.o $(OUTDIR)/main.o $(OUTDIR)/os.o 
+COMMON_OBJ=$(OUTDIR)/fifo.o $(OUTDIR)/interrupts.o $(OUTDIR)/main.o \
+	$(OUTDIR)/os.o 
 OBJ=$(COMMON_OBJ) $(CFG_OBJ)
-ALL_OBJ=$(OUTDIR)/fifo.o $(OUTDIR)/main.o $(OUTDIR)/os.o 
+ALL_OBJ=$(OUTDIR)/fifo.o $(OUTDIR)/interrupts.o $(OUTDIR)/main.o \
+	$(OUTDIR)/os.o 
 
-COMPILE=g++ -c   -o "$(OUTDIR)/$(*F).o" $(CFG_INC) "$<"
-LINK=g++  -o "$(OUTFILE)" $(OBJ) $(CFG_LIB)
+COMPILE=gcc -c   -o "$(OUTDIR)/$(*F).o" $(CFG_INC) "$<"
+LINK=gcc  -o "$(OUTFILE)" $(OBJ) $(CFG_LIB)
 
 # Pattern rules
 $(OUTDIR)/%.o : %.c
