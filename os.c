@@ -138,15 +138,13 @@ void idle()
 
 void spo1()
 {
-    printf("I'm spo %d \n", 1);
+//  printf("I'm spo %d \n", 1);
 }
 
 
 void spo2()
 {
-//  {
-    printf("I'm spo %d \n", 2);
-//  }
+//  printf("I'm spo %d \n", 2);
 }
 
 void Enqueue(ProcQueue* prq, ProcCtrlBlock* p);
