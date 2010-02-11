@@ -10,6 +10,7 @@
 #include "os.h"
 #include "interrupts.h"
 #include "fifo.h"
+#include "lcd.h"
 #include <stdlib.h>
 
 
@@ -66,9 +67,68 @@ int PPP[MAXPROCESS];
 int PPPMax[MAXPROCESS];
 int PPPLen;
 
-static int schedIdx;
-
 char acWorkspaces[MAXPROCESS*WORKSPACE];
+
+
+void sys_print_lcd(char* text) {
+	unsigned char i = 0;
+        unsigned int k;
+	
+	*(volatile unsigned char *)(0xfe) = 0;
+	*(volatile unsigned char *)(0xff) = 3;
+//  __asm__ __volatile__ ("jsr 32");
+	
+	for (k = 1; k != 0; k++);
+	
+	*(volatile unsigned char *)(0xfe) = 2;
+	while (*text != 0 && i < MAX_CHAR_COUNT) {
+		*(volatile unsigned char *)(0xff) = *text;
+//  	__asm__ __volatile__ ("jsr 32");
+		text++;
+		i++;
+	}
+	
+}
+
+static void _sys_send_command_lcd(void) {
+///    __asm__ __volatile__ ("
+///        ldx     #4096
+///        bclr    0,X #16
+///        bclr    60,X    #32
+///        bclr    0,X     #16
+///        ldaa    #255
+///        staa    7,X
+///ldaa	254
+///        staa    4,X
+///        ldab    255
+///        stab    3,X
+///        bset    0,X     #16
+///        bclr    0,X     #16
+///        clr     7,X
+///wait:	ldaa	#1
+///        staa    4,X
+///        bset    0,X     #16
+///        ldab    3,X
+///        bclr    0,X     #16
+///        andb    #128
+///        beq     wait
+///
+///Done:	bset	60,X	#32 ");
+}
+
+void _sys_init_lcd(void) {
+	void* sys_print_loc =  &_sys_send_command_lcd;
+	void* internal_mem = (void *)0x0020;
+	
+	for (; internal_mem < (void *) 0x00ff; internal_mem++, sys_print_loc++)
+		*(unsigned char *)(internal_mem) = *(unsigned char *)(sys_print_loc);
+
+	*(volatile unsigned char *)(0xfe) = 0;
+	*(volatile unsigned char *)(0xff) = 15;
+
+	__asm__ __volatile__ ("jsr 32");
+}
+
 
 void idle()
 {
@@ -76,22 +136,23 @@ void idle()
 }
 
 
-void idle0()
+void spo1()
 {
-//  printf("idle %d \n", 0);
+    printf("I'm spo %d \n", 1);
 }
 
 
-void idle1()
+void spo2()
 {
 //  {
-//  printf("idle %d \n", 1);
+    printf("I'm spo %d \n", 2);
 //  }
 }
 
 void Enqueue(ProcQueue* prq, ProcCtrlBlock* p);
 BOOL Dequeue(ProcQueue *prq, ProcCtrlBlock** p);
 void InitQueues();
+void Schedule(void);
 
 void OS_Yield(void)
 {
@@ -123,6 +184,17 @@ void context_switch (void)
 {
     B_SET(TFLG1, 4);
     B_UNSET(TMSK1, 4); /* disable OC4 interrupt*/
+
+    if ( currProc->level == SPORADIC )
+    {
+        currProc->state = READY;
+    }
+    storeSP(currProc->sp);
+
+    Schedule();
+
+    loadSP(currProc->sp);
+
 
 
 }
@@ -262,34 +334,36 @@ void OS_Terminate(void)
     /* TODO: need a context switch */
 }
 
-void OS_Schedule(void)
+void Schedule(void)
 {
 
-//  for ( int i = 0; i < PPPLen; ++i )
+    ProcCtrlBlock *p0;
+    BOOL found = FALSE;
+    if ( Dequeue(&spoProcs, &p0) == TRUE )
+    {
+        currProc = p0;
+    }
+    currProc->state = RUNNING;
+
+    /* for the other ugly process */
+//  int i;
+//  for ( i = 0; i < MAXPROCESS; i++ )
 //  {
-//      set_interrupt(PPPMax[i]);
-//      context_switch(PPP[i]);
+//      if ( arrProcs[i].name == PPP[schedIdx] )
+//      {
+//          currProc = &arrProcs[i];
+//          break;
+//      }
 //  }
-
-    /* scheduler is the */
-    int i;
-    for ( i = 0; i < MAXPROCESS; i++ )
-    {
-        if ( arrProcs[i].name == PPP[schedIdx] )
-        {
-            currProc = &arrProcs[i];
-            break;
-        }
-    }
-
-    if ( schedIdx == PPPLen - 1 )
-    {
-        schedIdx = 0;
-    }
-    else
-    {
-        ++schedIdx;
-    }
+//
+//  if ( schedIdx == PPPLen - 1 )
+//  {
+//      schedIdx = 0;
+//  }
+//  else
+//  {
+//      ++schedIdx;
+//  }
 }
 
 void Enqueue(ProcQueue* prq, ProcCtrlBlock* p)
@@ -335,9 +409,9 @@ void InitQueues()
     spoProcs.next = 0;       
     spoProcs.first = 0;      
 }
- 
- 
- 
+
+
+
 FIFO OS_InitFiFo()
 {
     /* gets next available message queue */

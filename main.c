@@ -11,9 +11,6 @@ void foo()
 
 int main (int argc, char *argv[])
 {
-    unsigned char my_int = 10, my_var = 15;
-    int i, inter;
-
     /**
      *   The PPP[] array is a sequence of names which specifies the execution
      *   order of all PERIODIC processes. The name of every PERIODIC
@@ -32,17 +29,17 @@ int main (int argc, char *argv[])
 //  PPP[] = {IDLE, 1};
 //  PPPMax[] = {3, 3};
 
-// __asm__ __volatile__(
-//                    "ldaa      %0\n"
-//  				  "ldab      %1\n"
-//  				  "aba         \n"
-//  				  "staa      %0\n"
-//                    : "=m"  (my_var)
-//                    : "m"  (my_int), "m" (my_var)
-//                    : "a", "b"                         /* no clobber-list */
-//                    );
+    __asm__ __volatile__(
+                       "ldaa      %0\n"
+                       "ldab      %1\n"
+                       "aba         \n"
+                       "staa      %0\n"
+                       : "=m"  (my_var)
+                       : "m"  (my_int), "m" (my_var)
+                       : "a", "b"                         /* no clobber-list */
+                       );
 
-    //print("%d", my_int);
-    //OS_Start();
+    print("%d", my_int);
+//  OS_Start();
     return 0;
 }
