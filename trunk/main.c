@@ -10,6 +10,12 @@ void foo()
 
 /* main() can then create processes and initialize the PPP[] and PPPMax[] arrays */
 
+void serial_print (const char *msg)
+{
+  while (*msg != 0)
+    serial_send (*msg++);
+}
+
 int main (int argc, char *argv[])
 {
     int my_var, my_int;

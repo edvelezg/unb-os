@@ -4,15 +4,14 @@ CFLAGS=-g -Os -mshort -Wl,-m,m68hc11elfb -I. #old: CFLAGS+=-fomit-frame-pointer
 LDFLAGS=-g -Os -mshort -Wl,-m,m68hc11elfb -Wl
 
 
-OBJCOPYFLAGS=-S --only-section=.text --only-section=.rodata
---only-section=.vectors --only-section=.data
+#OBJCOPYFLAGS=-S --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.data
 OBJDUMP=hc12-elf-objdump
 
 #Files - what we are trying to build.
 LDSCRIPT=memory.x
 #Leave the .c off of SRC
 SRC=main
-OBJ=$(SRC).o
+OBJ=$(SRC).o os.o
 ELF=$(SRC).elf
 S19=$(SRC).s19
 
@@ -20,11 +19,11 @@ S19=$(SRC).s19
 %.o : %.c
 	$(OBJ)
 #Rules
-all :: $(S19)
+all :: $(ELF)
 
 #Objcopy - translate ELF into S19 file.
-$(S19) : $(ELF)
-	$(OBJCOPY) $(OBJCOPYFLAGS) $(ELF) -O srec $(S19)
+#$(S19) : $(ELF)
+#        $(OBJCOPY) $(OBJCOPYFLAGS) $(ELF) -O srec $(S19)
 
 #Link - combine object files into an ELF.
 $(ELF) : $(OBJ)
