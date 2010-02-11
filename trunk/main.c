@@ -1,4 +1,5 @@
 #include "os.h"
+#include "lcd.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -39,6 +40,18 @@ int main (int argc, char *argv[])
                        : "m"  (my_int), "m" (my_var)
                        : "a", "b"                         /* no clobber-list */
                        );
+
+
+    /* Configure the SCI to send at M6811_DEF_BAUD baud.  */
+  _io_ports[M6811_BAUD] = M6811_DEF_BAUD;
+
+  /* Setup character format 1 start, 8-bits, 1 stop.  */
+  _io_ports[M6811_SCCR1] = 0;
+
+  /* Enable receiver and transmitter.  */
+  _io_ports[M6811_SCCR2] = M6811_TE | M6811_RE;
+
+  serial_print ("Hello world!\n");
 
 //  print("%d", my_int);
 //  OS_Start();
