@@ -1,6 +1,7 @@
 /*******************************************************************
 *
-*    DESCRIPTION: This is a kernel for a robot.
+*    DESCRIPTION: This is a kernel for the motorolla robot with
+*    processor MC11.
 *    AUTHOR: Eduardo Gutarra Velez.
 *    DATE: 2/19/2010
 *
@@ -10,6 +11,20 @@
 #include "interrupts.h"
 #include "fifo.h"
 #include <stdlib.h>
+
+
+///* source: http://www.catonmat.net/blog/bit-hacks-header-file/ */
+///* set n-th bit in x */
+//#define B_SET(x, n)      ((x) |= (1<<(n)))
+///* unset n-th bit in x */
+//#define B_UNSET(x, n)    ((x) &= ~(1<<(n)))
+///* toggle n-th bit in x */
+//#define B_TOGGLE(x, n)   ((x) ^= (1<<(n)))
+//
+//
+//#define TMSK1   (*(volatile int *)(VECTOR_BASE + 0x22))
+//#define TFLG1   (*(volatile int *)(VECTOR_BASE + 0x23))
+//#define TMSK2   (*(volatile int *)(VECTOR_BASE + 0x24))
 
 typedef enum 
 {
@@ -30,7 +45,7 @@ typedef struct pcb_struct
     int         name;
 } ProcCtrlBlock;
 
-typedef struct ProcQueue
+typedef struct queue_struct
 {
     ProcCtrlBlock*  procRefs[MAXPROCESS];  /* message circular buffer */
     int             fillCount;         /* keeps track of the number of items */          
@@ -103,6 +118,15 @@ void OS_Signal(int s)
 {
 }
 
+__attribute__ ((interrupt))
+void context_switch (void)
+{
+    B_SET(TFLG1, 4);
+    B_UNSET(TMSK1, 4); /* disable OC4 interrupt*/
+
+
+}
+
 /* OS Initialization */
 void OS_Init(void)
 {
@@ -128,6 +152,9 @@ void OS_Init(void)
     /* TODO: determine quantum I can hardcore that */
     /* TODO: use the same hw setup interrupt ot increment a timer */
     /* TODO: enable interrupts? */
+
+    TOC4V = &context_switch;
+    SWIV  = &context_switch;
 }
 void OS_Start(void)
 {
@@ -135,17 +162,12 @@ void OS_Start(void)
      * If no task is running, and all tasks are not in the ready 
      * state, the idle task executes 
      * */ 
-
-    idle();
+    B_SET(TMSK1, 4); /* enable oc4 interrupt */
+    B_SET(TMSK2, 7 ); /* enable toi interrupt */
+//  asm("swi"); /* trigger sw interrupt*/
 
 }
 
-void context_switch (void)
-{
-    OS_DI(); /* disable all interrupts */
-
-    OS_EI(); /* enable all interrupts */  
-}
 void OS_Abort()
 {
     //EXIT();
@@ -318,7 +340,7 @@ void InitQueues()
  
 FIFO OS_InitFiFo()
 {
-    /* gets next available fifo */
+    /* gets next available message queue */
     if ( numFifos < MAXFIFO )
     {
         arrFifos[numFifos].fillCount = 0;
@@ -329,7 +351,7 @@ FIFO OS_InitFiFo()
     }
     else
     {
-        /* ran out of fifos */
+        /* ran out of message queues */
         return INVALIDFIFO;
     }
 }
