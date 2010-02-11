@@ -40,7 +40,7 @@ int main (int argc, char *argv[])
                        : "a", "b"                         /* no clobber-list */
                        );
 
-    print("%d", my_int);
+//  print("%d", my_int);
 //  OS_Start();
     return 0;
 }
