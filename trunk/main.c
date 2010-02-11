@@ -11,6 +11,7 @@ void foo()
 
 int main (int argc, char *argv[])
 {
+    int my_var, my_int;
     /**
      *   The PPP[] array is a sequence of names which specifies the execution
      *   order of all PERIODIC processes. The name of every PERIODIC
