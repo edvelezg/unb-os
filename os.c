@@ -90,29 +90,29 @@ void sys_print_lcd(char* text) {
 }
 
 static void _sys_send_command_lcd(void) {
-///    __asm__ __volatile__ ("
-///        ldx     #4096
-///        bclr    0,X #16
-///        bclr    60,X    #32
-///        bclr    0,X     #16
-///        ldaa    #255
-///        staa    7,X
-///ldaa	254
-///        staa    4,X
-///        ldab    255
-///        stab    3,X
-///        bset    0,X     #16
-///        bclr    0,X     #16
-///        clr     7,X
-///wait:	ldaa	#1
-///        staa    4,X
-///        bset    0,X     #16
-///        ldab    3,X
-///        bclr    0,X     #16
-///        andb    #128
-///        beq     wait
-///
-///Done:	bset	60,X	#32 ");
+        __asm__ __volatile__ (
+  "          ldx     #4096       "
+  "          bclr    0,X #16     "
+  "          bclr    60,X    #32 "
+  "          bclr    0,X     #16 "
+  "          ldaa    #255        "
+  "          staa    7,X         "
+  "          ldaa	254          "
+  "          staa    4,X         "
+  "          ldab    255         "
+  "          stab    3,X         "
+  "          bset    0,X     #16 "
+  "          bclr    0,X     #16 "
+  "          clr     7,X         "
+  "  wait:	ldaa	#1           "
+  "          staa    4,X         "
+  "          bset    0,X     #16 "
+  "          ldab    3,X         "
+  "          bclr    0,X     #16 "
+  "          andb    #128        "
+  "          beq     wait        "
+  "                              "
+  "  Done:	bset	60,X	#32  ");
 }
 
 void _sys_init_lcd(void) {
@@ -343,24 +343,24 @@ void Schedule(void)
     currProc->state = RUNNING;
 
     /* for the other ugly process */
-//  int i;
-//  for ( i = 0; i < MAXPROCESS; i++ )
-//  {
-//      if ( arrProcs[i].name == PPP[schedIdx] )
-//      {
-//          currProc = &arrProcs[i];
-//          break;
-//      }
-//  }
-//
-//  if ( schedIdx == PPPLen - 1 )
-//  {
-//      schedIdx = 0;
-//  }
-//  else
-//  {
-//      ++schedIdx;
-//  }
+    int i;
+    for ( i = 0; i < MAXPROCESS; i++ )
+    {
+        if ( arrProcs[i].name == PPP[schedIdx] )
+        {
+            currProc = &arrProcs[i];
+            break;
+        }
+    }
+
+    if ( schedIdx == PPPLen - 1 )
+    {
+        schedIdx = 0;
+    }
+    else
+    {
+        ++schedIdx;
+    }
 }
 
 void Enqueue(ProcQueue* prq, ProcCtrlBlock* p)
