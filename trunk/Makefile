@@ -1,7 +1,7 @@
 #Tools - definitions of toolchain setup.
 CC=C:/usr/bin/m6811-elf-gcc
 CFLAGS=-g -Os -mshort -Wl,-m,m68hc11elfb -I. #old: CFLAGS+=-fomit-frame-pointer
-LDFLAGS=-g -Os -mshort -Wl,-m,m68hc11elfb -Wl
+LDFLAGS=-g -Os -mshort -Wl,-m,m68hc11elfb
 
 
 #OBJCOPYFLAGS=-S --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.data
