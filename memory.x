@@ -22,4 +22,4 @@ SECTIONS
 PROVIDE (_stack = 0xFFBF);
 /* Setup the stack on the top of the data internal ram (not used).  */
 /* PROVIDE (_stack = 0x0100-1); */
-PROVIDE (_io_ports = 0x1000);
+/* ROVIDE (_io_ports = 0x1000); no longer needed */

@@ -35,8 +35,6 @@
    the _io_ports address is defined in the `memory.x' file.  */
 
 
-extern volatile unsigned char _io_ports[];
-
 /* Part 2:  68HC11 SIO Operations. */
 
 /*! Send the character on the serial line.*/
