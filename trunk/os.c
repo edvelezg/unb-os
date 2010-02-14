@@ -10,7 +10,7 @@
 #include "ports.h"
 #include "os.h"
 #include "interrupts.h"
-//#include "fifo.h"
+#include "fifo.h"
 #include "lcd.h"
 
 
@@ -141,10 +141,12 @@ void OS_Start(void)
      * If no task is running, and all tasks are not in the ready 
      * state, the idle task executes 
      * */ 
-    while ( 1 )
-    {
-        Schedule();
-    }
+//  while ( 1 )
+//  {
+//      Schedule();
+//  }
+
+    SWI();
 }
 
 void OS_Abort()
@@ -201,6 +203,11 @@ PID  OS_Create(void (*f)(void), int arg, unsigned int level, unsigned int n)
 void SWI()
 {
     asm volatile ("swi");
+}
+
+void RTI()
+{
+    asm volatile ("rti");
 }
 
 void OS_Terminate(void)
@@ -302,6 +309,8 @@ void __attribute__ ((interrupt)) contextSwitch (void)
     /* Set the CPU's stack pointer so RTI can unwind the new process's stack */
     asm("lds %0" : : "m" (currProc->sp));
 
+    SWI();
+
 //  /* Check the message queue */
 //  if(currProc->fifo != INVALIDFIFO)
 //  {
@@ -356,59 +365,57 @@ void InitQueues()
     spoProcs.first = 0;      
 }
 
+FIFO OS_InitFiFo()
+{
+    /* gets next available message queue */
+    if ( numFifos < MAXFIFO )
+    {
+        arrFifos[numFifos].fillCount = 0;
+        arrFifos[numFifos].next = 0;
+        arrFifos[numFifos].first = 0;
+        ++numFifos;
+        return numFifos;
+    }
+    else
+    {
+        /* ran out of message queues */
+        return INVALIDFIFO;
+    }
+}
 
+void OS_Write(FIFO f, int val)
+{
+    int idx = f - 1;
+    fifo_struct *curFifo = &arrFifos[idx];
 
-//FIFO OS_InitFiFo()
-//{
-//    /* gets next available message queue */
-//    if ( numFifos < MAXFIFO )
-//    {
-//        arrFifos[numFifos].fillCount = 0;
-//        arrFifos[numFifos].next = 0;
-//        arrFifos[numFifos].first = 0;
-//        ++numFifos;
-//        return numFifos;
-//    }
-//    else
-//    {
-//        /* ran out of message queues */
-//        return INVALIDFIFO;
-//    }
-//}
+    /* the buffer still has space to write
+       if it is full writes are ignored */
+    if ( curFifo->fillCount < FIFOSIZE )
+    {
+        curFifo->buffer[curFifo->next] = val;
+        curFifo->next = (curFifo->next + 1) % FIFOSIZE;
+    }
 
-//void OS_Write(FIFO f, int val)
-//{
-//    int idx = f - 1;
-//    fifo_struct *curFifo = &arrFifos[idx];
-//
-//    /* the buffer still has space to write
-//       if it is full writes are ignored */
-//    if ( curFifo->fillCount < FIFOSIZE )
-//    {
-//        curFifo->buffer[curFifo->next] = val;
-//        curFifo->next = (curFifo->next + 1) % FIFOSIZE;
-//    }
-//
-//    /* increment fillcount if not full */
-//    curFifo->fillCount = (curFifo->fillCount == FIFOSIZE) ? FIFOSIZE : ++curFifo->fillCount;
-//}
+    /* increment fillcount if not full */
+    curFifo->fillCount = (curFifo->fillCount == FIFOSIZE) ? FIFOSIZE : ++curFifo->fillCount;
+}
 
-//BOOL OS_Read(FIFO f, int *val)
-//{
-//    int idx = f - 1;
-//    fifo_struct *curFifo = &arrFifos[idx];
-//
-//    /* the buffer is empty */
-//    if ( curFifo->fillCount <= 0 )
-//    {
-//        return FALSE;
-//    }
-//    /* there are still elements in the buffer */
-//    else
-//    {
-//        *val = curFifo->buffer[curFifo->first];
-//        curFifo->first = (curFifo->first + 1) % FIFOSIZE;
-//        curFifo->fillCount--;
-//        return TRUE;
-//    }
-//}
+BOOL OS_Read(FIFO f, int *val)
+{
+    int idx = f - 1;
+    fifo_struct *curFifo = &arrFifos[idx];
+
+    /* the buffer is empty */
+    if ( curFifo->fillCount <= 0 )
+    {
+        return FALSE;
+    }
+    /* there are still elements in the buffer */
+    else
+    {
+        *val = curFifo->buffer[curFifo->first];
+        curFifo->first = (curFifo->first + 1) % FIFOSIZE;
+        curFifo->fillCount--;
+        return TRUE;
+    }
+}
