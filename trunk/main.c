@@ -11,25 +11,77 @@ void foo()
 
 void spo1()
 {
+    int i;
 	serial_print ("I'm in Spo1()!\n");
-    OS_Yield();
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+//  OS_Yield();
 }
 
 void spo2()
 {
+    int i;
 	serial_print ("I'm in Spo2()!\n");
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
 	//OS_Yield();
 }
 
 void spo3()
 {
-	serial_print ("I'm in Spo3()!\n");
+    int i;
+	serial_print ("I'm in PerA()!\n");
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
 	//OS_Yield();
 }
 
 void spo4()
 {
-	serial_print ("I'm in Spo4()!\n");
+    int i;
+	serial_print ("I'm in PerB()!\n");
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
+    for ( i = 1; i != 0 ; ++i );
 	//OS_Yield();
 }
 
@@ -71,12 +123,23 @@ int main (int argc, char *argv[])
      *   process must appear in PPP[] array at least once, but may be more 
      *   than once.
      */
-	OS_DI();
+//  OS_DI();
 	OS_Init();
-	OS_Create(spo2, 0, SPORADIC, 1);
 	OS_Create(spo1, 0, SPORADIC, 1);
-	OS_Create(spo3, 0, SPORADIC, 1);
-	OS_Create(spo4, 0, SPORADIC, 1);
+	OS_Create(spo2, 0, SPORADIC, 1);
+	OS_Create(spo3, 0, PERIODIC, 'A');
+	OS_Create(spo4, 0, PERIODIC, 'B');
+
+	PPP[0] = 'A';
+	PPP[1] = IDLE;
+	PPP[2] = 'B';
+	PPP[3] = IDLE;
+	PPPMax[0] = 2;
+	PPPMax[1] = 3;
+	PPPMax[2] = 4;
+	PPPMax[3] = 5;
+	PPPLen = 4;
+
 	OS_Start();
 	
     return 0;
