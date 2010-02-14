@@ -287,7 +287,7 @@ void context_switch_to_process (void)
 		asm volatile ("lds %0" : : "m" (currProc->sp) : "memory");
 		currProc->state = READY;
 		currProc->pc(); /* call the function for the first time */
-		OS_Terminate();
+        OS_Terminate();
 	}
 	else if ( currProc->state == READY )
 	{
