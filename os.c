@@ -41,12 +41,12 @@ typedef struct queue_struct
 
 } ProcQueue;
 
-typedef struct kernelStack
+typedef struct kernel_struct
 {
-	char* kernelSP;
-} kernelPointer;
+    char* kernelSP;
+} KernelCtrlBlock;
 
-kernelPointer kernSp;
+KernelCtrlBlock kernSp;
 
 ProcQueue devProcs;
 ProcQueue spoProcs;
@@ -58,6 +58,7 @@ ProcCtrlBlock* currProc;
 int PPP[MAXPROCESS];           
 int PPPMax[MAXPROCESS];
 int PPPLen;
+static int scheduleIdx = 0;
 
 char acWorkspaces[MAXPROCESS*WORKSPACE];
 
@@ -66,19 +67,23 @@ void Enqueue(ProcQueue* prq, ProcCtrlBlock* p);
 BOOL Dequeue(ProcQueue *prq, ProcCtrlBlock** p);
 void InitQueues();
 void Schedule(void);
-void context_switch_to_kernel (void);
-void context_switch_to_process (void);
+//void context_switch_to_kernel (void);
+//void context_switch_to_process (void);
+void __attribute__ ((interrupt)) contextSwitch (void);
 
-void idle()
+void idle(void)
 {
-//  printf("idle %d \n", -1);
+    while ( TRUE )
+    {
+    }
 }
 
 
 void OS_Yield(void)
 {
-	Enqueue(&spoProcs, currProc);
-	SWI();
+//  Enqueue(&spoProcs, currProc);
+//  SWIV = context_switch_to_kernel;
+    SWI();
 }
 
 int  OS_GetParam(void)
@@ -126,8 +131,9 @@ void OS_Init(void)
     /* TODO: determine quantum I can hardcore that */
     /* TODO: use the same hw setup interrupt ot increment a timer */
     /* TODO: enable interrupts? */
+    currProc = &idleProc;
 
-    SWIV  = context_switch_to_process;
+    SWIV  = contextSwitch;
 }
 void OS_Start(void)
 {
@@ -135,10 +141,10 @@ void OS_Start(void)
      * If no task is running, and all tasks are not in the ready 
      * state, the idle task executes 
      * */ 
-	while (1)
-	{
-		Schedule();
-	}
+    while ( 1 )
+    {
+        Schedule();
+    }
 }
 
 void OS_Abort()
@@ -194,7 +200,7 @@ PID  OS_Create(void (*f)(void), int arg, unsigned int level, unsigned int n)
 
 void SWI()
 {
-	asm volatile ("swi");
+    asm volatile ("swi");
 }
 
 void OS_Terminate(void)
@@ -203,7 +209,7 @@ void OS_Terminate(void)
     currProc->name = -1;
     currProc->frequency = 0;
 
-  /*  ProcCtrlBlock *p0;
+    ProcCtrlBlock *p0; /* choose next process to run */
     BOOL found = FALSE;
     if ( currProc->level == SPORADIC )
     {
@@ -211,12 +217,12 @@ void OS_Terminate(void)
         {
             if ( p0 == currProc )
             {
-                /* if found dequeuing removes it * /
+                /* if found dequeuing removes it */
                 found = TRUE;
             }
             else
             {
-                /* if not found put it back in the queue* /
+                /* if not found put it back in the queue */
                 Enqueue(&spoProcs, p0);
             }
         }
@@ -227,90 +233,82 @@ void OS_Terminate(void)
         {
             if ( p0 == currProc )
             {
-                /* if found dequeuing removes it * /
+                /* if found dequeuing removes it */
                 found = TRUE;
             }
             else
             {
-                /* if not found put it back in the queue* /
+                /* if not found put it back in the queue */
                 Enqueue(&devProcs, p0);
             }
         }
-    } */
-	SWI();
+    }
+    SWI();
 }
 
 void Schedule(void)
 {
     ProcCtrlBlock *p0; /* choose next process to run */
     BOOL found = FALSE; 
-	/* choose how long to run it for */
+    int idx = 0;
+    /* choose how long to run it for */
 
-    if ( Dequeue(&spoProcs, &p0) == TRUE )
+    /* if device process is due schedule it */
+    if ( PPP[scheduleIdx] == IDLE )
     {
-        currProc = p0;
+        if ( Dequeue(&spoProcs, &p0) == TRUE )
+        {
+            currProc = p0;
+            Enqueue(&spoProcs, p0);
+            currProc->pc();
+        }
+        else
+        {
+            currProc = &idleProc;
+        }
     }
-	/* run it */
-	if (currProc != 0)
-	{
-		SWI(); /* triggers context_switch */
-	}
+    else
+    {
+        for ( idx = 0; idx < MAXPROCESS; ++idx ) /* Searching an available block */
+        {
+            if (arrProcs[idx].name == PPP[scheduleIdx])
+            {
+                currProc = &arrProcs[idx];
+                break;
+            }
+        }
+        currProc->pc();
+    }    
+    scheduleIdx = (scheduleIdx + 1) % PPPLen;
+    /* run it */
+//  if (currProc != 0)
+//  {
+//  	SWI(); /* triggers context_switch */
+//  }
 }
 
-void context_switch_to_kernel (void)
+void __attribute__ ((interrupt)) contextSwitch (void)
 {
-
-	/* coudl also do ins ins */
-	asm volatile ("sts %0" : "=m" (currProc->sp) : : "memory" ); 
-	currProc->sp += 2;
-
-	asm volatile ("lds %0" : : "m" (kernSp.kernelSP) : "memory");
-	
-	SWIV = context_switch_to_process;
-	
-	
-	asm volatile ("rti");  /* returning where the kernel was before */
-
-}
-
-
-void context_switch_to_process (void)
-{
-
-	asm volatile ("sts %0" : "=m" (kernSp.kernelSP) : : "memory" ); 
-	kernSp.kernelSP += 2;
-
-	SWIV = context_switch_to_kernel;
-	/*OC4V = OC4_Handler; */
-	if ( currProc->state == NEW )
-	{
-		asm volatile ("lds %0" : : "m" (currProc->sp) : "memory");
-		currProc->state = READY;
-		currProc->pc(); /* call the function for the first time */
-        OS_Terminate();
-	}
-	else if ( currProc->state == READY )
-	{
-		asm volatile ("lds %0" : : "m" (currProc->sp) : "memory");
-		asm volatile ("rti");  /* returning where that function was before */
-	}
-	else 
-	{
-		asm volatile ("lds %0" : : "m" (kernSp.kernelSP) : "memory");
-		asm volatile ("rti");
-	}
-
-    /*if ( currProc->level == SPORADIC )
+    if ( currProc->state == RUNNING )
     {
         currProc->state = READY;
     }
-    storeSP(currProc->sp);
 
-    Schedule();
+    /* Save the CPU's stack pointer in the current process's control block */
+    asm("sts %0" : : "m" (currProc->sp));
 
-    loadSP(currProc->sp);*/
+    Schedule(); /* Selects the next process and updates the currentProcess pointer */
 
-	//;
+    /* Set the CPU's stack pointer so RTI can unwind the new process's stack */
+    asm("lds %0" : : "m" (currProc->sp));
+
+//  /* Check the message queue */
+//  if(currProc->fifo != INVALIDFIFO)
+//  {
+//  	/* Note: signals are undefined at this point */
+//  }
+//
+//  currentProcess->state = RUNNING;
 }
 
 
