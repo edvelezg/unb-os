@@ -1,8 +1,6 @@
 #include "ports.h"
 #include "os.h"
 
-//extern char* kernelSP;
-
 void serial_print (char *msg);
 static inline void serial_send (char c);
 
@@ -10,10 +8,11 @@ void foo()
 {
     /* do nothing */
 }
+
 void spo1()
 {
 	serial_print ("I'm in Spo1()!\n");
-	//OS_Yield();
+    OS_Yield();
 }
 
 void spo2()
@@ -22,6 +21,17 @@ void spo2()
 	//OS_Yield();
 }
 
+void spo3()
+{
+	serial_print ("I'm in Spo3()!\n");
+	//OS_Yield();
+}
+
+void spo4()
+{
+	serial_print ("I'm in Spo4()!\n");
+	//OS_Yield();
+}
 
 /* main() can then create processes and initialize the PPP[] and PPPMax[] arrays */
 
@@ -65,6 +75,8 @@ int main (int argc, char *argv[])
 	OS_Init();
 	OS_Create(spo2, 0, SPORADIC, 1);
 	OS_Create(spo1, 0, SPORADIC, 1);
+	OS_Create(spo3, 0, SPORADIC, 1);
+	OS_Create(spo4, 0, SPORADIC, 1);
 	OS_Start();
 	
     return 0;
