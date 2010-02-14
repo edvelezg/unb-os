@@ -1,7 +1,7 @@
 #include "ports.h"
 #include "os.h"
 
-extern char* kernelSP;
+//extern char* kernelSP;
 
 void serial_print (char *msg);
 static inline void serial_send (char c);
