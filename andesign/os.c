@@ -10,7 +10,7 @@
 #include "ports.h"
 #include "os.h"
 #include "interrupts.h"
-//#include "fifo.h"
+#include "fifo.h"
 #include "lcd.h"
 
 
@@ -43,7 +43,7 @@ typedef struct queue_struct
 
 typedef struct kernel_struct
 {
-	char* kernelSP;
+    char* kernelSP;
 } KernelCtrlBlock;
 
 KernelCtrlBlock kernSp;
@@ -58,6 +58,7 @@ ProcCtrlBlock* currProc;
 int PPP[MAXPROCESS];           
 int PPPMax[MAXPROCESS];
 int PPPLen;
+static int scheduleIdx = 0; /* index for scheduling*/
 
 char acWorkspaces[MAXPROCESS*WORKSPACE];
 
@@ -77,9 +78,9 @@ void idle()
 
 void OS_Yield(void)
 {
-	Enqueue(&spoProcs, currProc);
-	SWIV = context_switch_to_kernel;
-	SWI();
+//  Enqueue(&spoProcs, currProc);
+    SWIV = context_switch_to_kernel;
+    SWI();
 }
 
 int  OS_GetParam(void)
@@ -136,9 +137,9 @@ void OS_Start(void)
      * If no task is running, and all tasks are not in the ready 
      * state, the idle task executes 
      * */ 
-    while (1)
+    while ( 1 )
     {
-		Schedule();
+        Schedule();
     }
 }
 
@@ -195,7 +196,7 @@ PID  OS_Create(void (*f)(void), int arg, unsigned int level, unsigned int n)
 
 void SWI()
 {
-	asm volatile ("swi");
+    asm volatile ("swi");
 }
 
 void OS_Terminate(void)
@@ -204,7 +205,7 @@ void OS_Terminate(void)
     currProc->name = -1;
     currProc->frequency = 0;
 
-  /*  ProcCtrlBlock *p0;
+    ProcCtrlBlock *p0;
     BOOL found = FALSE;
     if ( currProc->level == SPORADIC )
     {
@@ -212,12 +213,12 @@ void OS_Terminate(void)
         {
             if ( p0 == currProc )
             {
-                /* if found dequeuing removes it * /
+                /* if found dequeuing removes it */
                 found = TRUE;
             }
             else
             {
-                /* if not found put it back in the queue* /
+                /* if not found put it back in the queue*/
                 Enqueue(&spoProcs, p0);
             }
         }
@@ -228,76 +229,100 @@ void OS_Terminate(void)
         {
             if ( p0 == currProc )
             {
-                /* if found dequeuing removes it * /
+                /* if found dequeuing removes it */
                 found = TRUE;
             }
             else
             {
-                /* if not found put it back in the queue* /
+                /* if not found put it back in the queue */
                 Enqueue(&devProcs, p0);
             }
         }
-    } */
-	SWI();
+    }
+    SWI();
 }
 
 void Schedule(void)
 {
     ProcCtrlBlock *p0; /* choose next process to run */
     BOOL found = FALSE; 
-	/* choose how long to run it for */
+    int idx = 0;
+    /* choose how long to run it for */
 
-    if ( Dequeue(&spoProcs, &p0) == TRUE )
+    /* if device process is due schedule it */
+    if ( PPP[scheduleIdx] == IDLE )
     {
-        currProc = p0;
+        if ( Dequeue(&spoProcs, &p0) == TRUE )
+        {
+            currProc = p0;
+            Enqueue(&spoProcs, p0);
+        }
+        else
+        {
+            currProc = &idleProc;
+        }
     }
-	/* run it */
-	if (currProc != 0)
-	{
-		SWI(); /* triggers context_switch */
-	}
+    else
+    {
+        for ( idx = 0; idx < MAXPROCESS; ++idx ) /* Searching an available block */
+        {
+            if ( arrProcs[idx].name == PPP[scheduleIdx] )
+            {
+                currProc = &arrProcs[idx];
+                break;
+            }
+        }
+    }    
+    scheduleIdx = (scheduleIdx + 1) % PPPLen;
+
+    /* context switch to process */
+    if ( currProc != 0 )
+    {
+
+        SWI(); /* triggers context_switch */
+    }
 }
 
 void context_switch_to_kernel (void)
 {
-	/* coudl also do ins ins */
-	asm volatile ("sts %0" : "=m" (currProc->sp) : : "memory" ); 
-	currProc->sp += 2;
+    /* coudl also do ins ins */
+    asm volatile ("sts %0" : "=m" (currProc->sp) : : "memory" ); 
+    currProc->sp += 2;
 
-	asm volatile ("lds %0" : : "m" (kernSp.kernelSP) : "memory");
-	
-	SWIV = context_switch_to_process;
-	
-	asm volatile ("rti");  /* returning where the kernel was before */
+    asm volatile ("lds %0" : : "m" (kernSp.kernelSP) : "memory");
+
+    SWIV = context_switch_to_process;
+
+    asm volatile ("rti");  /* returning where the kernel was before */
 }
 
 
 void context_switch_to_process (void)
 {
-	asm volatile ("sts %0" : "=m" (kernSp.kernelSP) : : "memory" ); 
-	kernSp.kernelSP += 2;
+    asm volatile ("sts %0" : "=m" (kernSp.kernelSP) : : "memory" ); 
+    kernSp.kernelSP += 2;
 
-	SWIV = context_switch_to_kernel;
-	/*OC4V = OC4_Handler; */
-	if ( currProc->state == NEW )
-	{
-		asm volatile ("lds %0" : : "m" (currProc->sp) : "memory");
-		currProc->state = READY;
-		currProc->pc(); /* call the function for the first time */
-        OS_Yield();
-	}
-	else if ( currProc->state == READY )
-	{
-		asm volatile ("lds %0" : : "m" (currProc->sp) : "memory");
-//  	asm volatile ("rti");  /* returning where that function was before */
-        currProc->pc();
-        OS_Yield();
-	}
-	else 
-	{
-		asm volatile ("lds %0" : : "m" (kernSp.kernelSP) : "memory");
-		asm volatile ("rti");
-	}
+    SWIV = context_switch_to_kernel;
+    /*OC4V = OC4_Handler; */
+    if ( currProc->state == NEW )
+    {
+        asm volatile ("lds %0" : : "m" (currProc->sp) : "memory");
+        currProc->state = READY;
+        currProc->pc(); /* call the function for the first time */
+        OS_Terminate();
+    }
+    else if ( currProc->state == READY )
+    {
+        asm volatile ("lds %0" : : "m" (currProc->sp) : "memory");
+        asm volatile ("rti");  /* returning where that function was before */
+//      currProc->pc();
+//      OS_Yield();
+    }
+    else
+    {
+        asm volatile ("lds %0" : : "m" (kernSp.kernelSP) : "memory");
+        asm volatile ("rti");
+    }
 }
 
 
@@ -345,59 +370,58 @@ void InitQueues()
     spoProcs.first = 0;      
 }
 
+FIFO OS_InitFiFo()
+{
+    /* gets next available message queue */
+    if ( numFifos < MAXFIFO )
+    {
+        arrFifos[numFifos].fillCount = 0;
+        arrFifos[numFifos].next = 0;
+        arrFifos[numFifos].first = 0;
+        ++numFifos;
+        return numFifos;
+    }
+    else
+    {
+        /* ran out of message queues */
+        return INVALIDFIFO;
+    }
+}
 
+void OS_Write(FIFO f, int val)
+{
+    int idx = f - 1;
+    fifo_struct *curFifo = &arrFifos[idx];
 
-//FIFO OS_InitFiFo()
-//{
-//    /* gets next available message queue */
-//    if ( numFifos < MAXFIFO )
-//    {
-//        arrFifos[numFifos].fillCount = 0;
-//        arrFifos[numFifos].next = 0;
-//        arrFifos[numFifos].first = 0;
-//        ++numFifos;
-//        return numFifos;
-//    }
-//    else
-//    {
-//        /* ran out of message queues */
-//        return INVALIDFIFO;
-//    }
-//}
+    /* the buffer still has space to write
+       if it is full writes are ignored */
+    if ( curFifo->fillCount < FIFOSIZE )
+    {
+        curFifo->buffer[curFifo->next] = val;
+        curFifo->next = (curFifo->next + 1) % FIFOSIZE;
+    }
 
-//void OS_Write(FIFO f, int val)
-//{
-//    int idx = f - 1;
-//    fifo_struct *curFifo = &arrFifos[idx];
-//
-//    /* the buffer still has space to write
-//       if it is full writes are ignored */
-//    if ( curFifo->fillCount < FIFOSIZE )
-//    {
-//        curFifo->buffer[curFifo->next] = val;
-//        curFifo->next = (curFifo->next + 1) % FIFOSIZE;
-//    }
-//
-//    /* increment fillcount if not full */
-//    curFifo->fillCount = (curFifo->fillCount == FIFOSIZE) ? FIFOSIZE : ++curFifo->fillCount;
-//}
+    /* increment fillcount if not full */
+    curFifo->fillCount = (curFifo->fillCount == FIFOSIZE) ? FIFOSIZE : ++curFifo->fillCount;
+}
 
-//BOOL OS_Read(FIFO f, int *val)
-//{
-//    int idx = f - 1;
-//    fifo_struct *curFifo = &arrFifos[idx];
-//
-//    /* the buffer is empty */
-//    if ( curFifo->fillCount <= 0 )
-//    {
-//        return FALSE;
-//    }
-//    /* there are still elements in the buffer */
-//    else
-//    {
-//        *val = curFifo->buffer[curFifo->first];
-//        curFifo->first = (curFifo->first + 1) % FIFOSIZE;
-//        curFifo->fillCount--;
-//        return TRUE;
-//    }
-//}
+BOOL OS_Read(FIFO f, int *val)
+{
+    int idx = f - 1;
+    fifo_struct *curFifo = &arrFifos[idx];
+
+    /* the buffer is empty */
+    if ( curFifo->fillCount <= 0 )
+    {
+        return FALSE;
+    }
+    /* there are still elements in the buffer */
+    else
+    {
+        *val = curFifo->buffer[curFifo->first];
+        curFifo->first = (curFifo->first + 1) % FIFOSIZE;
+        curFifo->fillCount--;
+        return TRUE;
+    }
+}
+
