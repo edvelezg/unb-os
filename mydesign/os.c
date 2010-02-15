@@ -58,7 +58,7 @@ ProcCtrlBlock* currProc;
 int PPP[MAXPROCESS];           
 int PPPMax[MAXPROCESS];
 int PPPLen;
-static int scheduleIdx = 0;
+volatile static int scheduleIdx = 0;
 
 char acWorkspaces[MAXPROCESS*WORKSPACE];
 
@@ -265,11 +265,15 @@ void Schedule(void)
         {
             currProc = p0;
             Enqueue(&spoProcs, p0);
-            if ( currProc->state == NEW )
-            {
-                currProc->pc();
-            }
-            OS_Terminate();
+//            if ( currProc->state == NEW )
+//            {
+//                currProc->state = READY;
+//          currProc->pc();
+//            }
+//          else if ( currProc->state == READY )
+//          {
+//
+//          }
         }
         else
         {
@@ -286,7 +290,7 @@ void Schedule(void)
                 break;
             }
         }
-        currProc->pc();
+//      currProc->pc();
     }    
     scheduleIdx = (scheduleIdx + 1) % PPPLen;
     /* run it */
@@ -308,10 +312,32 @@ void __attribute__ ((interrupt)) contextSwitch (void)
 
     Schedule(); /* Selects the next process and updates the currentProcess pointer */
 
-    /* Set the CPU's stack pointer so RTI can unwind the new process's stack */
-    asm("lds %0" : : "m" (currProc->sp));
+    if ( currProc->state == NEW )
+    {
+//      asm volatile ("lds %0" : : "m" (currProc->sp) : "memory");
+        currProc->state = READY;
+        currProc->pc(); /* call the function for the first time */
+        OS_Terminate();
+    }
+    else if ( currProc->state == READY  && currProc->state != TERMINATED)
+    {
+        asm volatile ("lds %0" : : "m" (currProc->sp) : "memory");
+//      asm volatile ("rti");  /* returning where that function was before */
+        RTI();
+//      currProc->pc();
+//      OS_Yield();
+    }
+    else
+    {
+        SWI();
+//      asm volatile ("lds %0" : : "m" (kernSp.kernelSP) : "memory");
+//      asm volatile ("rti");
+    }
 
-    SWI();
+    /* Set the CPU's stack pointer so RTI can unwind the new process's stack */
+//  asm("lds %0" : : "m" (currProc->sp));
+
+//  RTI();
 
 //  /* Check the message queue */
 //  if(currProc->fifo != INVALIDFIFO)
