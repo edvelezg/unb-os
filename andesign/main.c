@@ -33,21 +33,25 @@ void spo1()
 
 void spo2()
 {
-    int i;
-    serial_print ("I'm in Spo2()!\n");
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    //OS_Yield();
+	while ( 1 )
+	{
+		int i;
+		serial_print ("I'm in Spo2()!\n");
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		OS_Yield();
+	}
+    
 }
 
 void per1()
@@ -88,21 +92,24 @@ void per1()
 
 void per2()
 {
-    int i;
-    serial_print ("I'm in PerB()!\n");
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    //OS_Yield();
+	while ( 1 )
+	{
+		int i;
+		serial_print ("I'm in PerB()!\n");
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		for ( i = 1; i != 0 ; ++i );
+		OS_Yield();
+	}
 }
 
 /* main() can then create processes and initialize the PPP[] and PPPMax[] arrays */
