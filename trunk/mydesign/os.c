@@ -132,6 +132,7 @@ void OS_Init(void)
     currProc = &idleProc;
 
     SWIV  = contextSwitch;
+	TOC4V = contextSwitch;
 }
 void OS_Start(void)
 {
@@ -314,7 +315,7 @@ void __attribute__ ((interrupt)) contextSwitch (void)
 
     if ( currProc->state == NEW )
     {
-//      asm volatile ("lds %0" : : "m" (currProc->sp) : "memory");
+        asm volatile ("lds %0" : : "m" (currProc->sp) : "memory");
         currProc->state = READY;
         currProc->pc(); /* call the function for the first time */
         OS_Terminate();
