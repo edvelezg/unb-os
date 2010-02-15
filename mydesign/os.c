@@ -81,8 +81,6 @@ void idle(void)
 
 void OS_Yield(void)
 {
-//  Enqueue(&spoProcs, currProc);
-//  SWIV = context_switch_to_kernel;
     SWI();
 }
 
@@ -267,7 +265,11 @@ void Schedule(void)
         {
             currProc = p0;
             Enqueue(&spoProcs, p0);
-            currProc->pc();
+            if ( currProc->state == NEW )
+            {
+                currProc->pc();
+            }
+            OS_Terminate();
         }
         else
         {
