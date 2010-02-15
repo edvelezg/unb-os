@@ -35,8 +35,39 @@
    Address if fixed at link time.  For this particular example,
    the _io_ports address is defined in the `memory.x' file.  */
 
+/* Timing */ 
+#define M6811_TCNT_HIGH	0x0E	/* Timer Counter - Read in one instruction. */ 
+#define M6811_TCNT_LOW	0x0F
+/* Input Capture Registers */ 
+#define M6811_TIC1_HIGH	0x10	
+#define M6811_TIC1_LOW	0x11
+#define M6811_TIC2_HIGH	0x12
+#define M6811_TIC2_LOW	0x13
+#define M6811_TIC3_HIGH	0x14
+#define M6811_TIC3_LOW	0x15
+
+/* Output Capture Registers */
+#define M6811_TOC1_HIGH	0x16	
+#define M6811_TOC1_LOW	0x17
+#define M6811_TOC2_HIGH	0x18
+#define M6811_TOC2_LOW	0x19
+#define M6811_TOC3_HIGH	0x1A
+#define M6811_TOC3_LOW	0x1B
+#define M6811_TOC4_HIGH	0x1C
+#define M6811_TOC4_LOW	0x1D
+#define M6811_TOC5_HIGH	0x1E
+#define M6811_TOC5_LOW	0x1F
+
+#define M6811_TCTL1	0x20    /* OM2:OL2:OM3:OL3:OM4:OL4:OM5:OL5 */
+#define M6811_TCTL2	0x21    /* 0:0:EDG1B:EDG1A:EDG2B:EDG2A:EDG3B:EDG3A */
+#define M6811_TMSK1	0x22    /* OC1I:OC2I:OC3I:OC4I:OC5I:IC1I:IC2I:IC3I */
+#define M6811_TFLG1	0x23    /* OC1F:OC2F:OC3F:OC4F:OC5F:IC1F:IC2F:IC3F */ 
+#define M6811_TMSK2	0x24    /* TOI:RTII:PAOVI:PAII:0:0:PR1:PR0 */
+#define M6811_TFLG2	0x25    /* TOF:RTIF:PAOVF:PAIF:0:0:0:0 */ 
+#define M6811_PACTL	0x26    /* DDRA7:PAEN:PAMOD:PEDGE:0:0:RTR1:RTR0 */ 
 
 #define _io_ports ((volatile unsigned char*)(PORT_BASE))
-//extern volatile unsigned char _io_ports[];
+
+#define TICKS_IN_MS 250
 
 #endif

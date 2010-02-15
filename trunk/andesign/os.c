@@ -121,7 +121,6 @@ void OS_Init(void)
     idleProc.level     = PERIODIC;
     idleProc.state     = READY;
     idleProc.argument  = 0;
-    /* TODO: does it need a workspace?*/
     idleProc.pc        = idle;
 
     InitQueues();
@@ -130,6 +129,7 @@ void OS_Init(void)
     /* TODO: enable interrupts? */
 
     SWIV  = context_switch_to_process;
+	TOC4V = context_switch_to_process;
 }
 void OS_Start(void)
 {
@@ -425,3 +425,20 @@ BOOL OS_Read(FIFO f, int *val)
     }
 }
 
+unsigned int timeToPreempt()
+{
+	unsigned int currTime;
+	unsigned int timeToPreempt;
+	unsigned int *myP;
+	myP = (unsigned int *)&_io_ports[M6811_TCNT_HIGH];
+	currTime = *myP;
+	timeToPreempt = currTime + PPPMax[scheduleIdx] * TICKS_IN_MS;
+
+	myP = (unsigned int * )&_io_ports[M6811_TOC4_HIGH];
+	*myP = timeToPreempt;
+
+	B_SET(_io_ports[M6811_TMSK1], 4);
+	B_SET(_io_ports[M6811_TFLG1], 4);
+
+	/* TODO: if the time is greater than the next device process then I will preempt before */
+}
