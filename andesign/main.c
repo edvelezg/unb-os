@@ -1,5 +1,6 @@
 #include "ports.h"
 #include "os.h"
+#include "interrupts.h"
 
 void serial_print (char *msg);
 static inline void serial_send (char c);
@@ -56,11 +57,27 @@ void spo2()
 
 void per1()
 {
-    int i;
+	unsigned int *myP;
+	char *str = "      ";
+	unsigned int i;
 
+	myP = (unsigned int *)&_io_ports[M6811_TCNT_HIGH];
+	
     while ( 1 )
     {
+		i = *myP;
+		str[5] = (i % 10) + '0';
+		i /= 10;
+		str[4] = (i % 10) + '0';
+		i /= 10;
+		str[3] = (i % 10) + '0';
+		i /= 10;
+		str[2] = (i % 10) + '0';
+		i /= 10;
+		str[1] = (i % 10) + '0';
         serial_print ("I'm in PerA() Part 1!\n");
+        serial_print (str);
+        serial_print ("\n");
         for ( i = 1; i != 0 ; ++i );
         for ( i = 1; i != 0 ; ++i );
         for ( i = 1; i != 0 ; ++i );
@@ -73,7 +90,6 @@ void per1()
         for ( i = 1; i != 0 ; ++i );
         for ( i = 1; i != 0 ; ++i );
         for ( i = 1; i != 0 ; ++i );
-        OS_Yield();
         serial_print ("I'm in PerA Part 2()!\n");
         for ( i = 1; i != 0 ; ++i );
         for ( i = 1; i != 0 ; ++i );
@@ -135,7 +151,10 @@ int main (int argc, char *argv[])
 {
     int my_var, my_int;
 
-    /* Configure the SCI to send at M6811_DEF_BAUD baud.  */
+	B_SET(_io_ports[M6811_TMSK2], 0); // slows it down
+	B_SET(_io_ports[M6811_TMSK2], 1);
+
+	/* Configure the SCI to send at M6811_DEF_BAUD baud.  */
     _io_ports[M6811_BAUD] = M6811_DEF_BAUD;
 
     /* Setup character format 1 start, 8-bits, 1 stop.  */
@@ -157,8 +176,8 @@ int main (int argc, char *argv[])
     OS_Create(per1, 0, PERIODIC, 'A');
     OS_Create(per2, 0, PERIODIC, 'B');
 
-    PPP[0] = IDLE;
-    PPP[1] = 'A';
+    PPP[0] = 'A';
+    PPP[1] = IDLE;
     PPP[2] = 'B';
     PPP[3] = IDLE;
     PPPMax[0] = 2;
