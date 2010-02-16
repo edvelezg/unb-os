@@ -11,60 +11,7 @@
 #include "interrupts.h"
 #include "ports.h"
 #include "fifo.h"
-
-typedef enum 
-{
-    NEW, RUNNING, WAITING, READY, TERMINATED
-} 
-States;
-
-typedef struct pcb_struct 
-{
-    PID         pid;
-    int         level;
-    States      state;
-    int         argument; /* argument */
-    char        *sp; /* stack pointer */
-    void        (*pc)(void); // function pointer
-    int         frequency;
-    int         name;
-} ProcCtrlBlock;
-
-typedef struct queue_struct
-{
-    ProcCtrlBlock*  procRefs[MAXPROCESS];  /* message circular buffer */
-    int             fillCount;         /* keeps track of the number of items */          
-    int             next;              /* next spot to write in */
-    int             first;             /* first element to read */
-
-} ProcQueue;
-
-typedef struct kernel_struct
-{
-    char* kernelSP;
-} KernelCtrlBlock;
-
-KernelCtrlBlock kernSp;
-
-ProcQueue devProcs;
-ProcQueue spoProcs;
-
-ProcCtrlBlock  arrProcs[MAXPROCESS];
-ProcCtrlBlock  idleProc;
-ProcCtrlBlock* currProc;
-
-int PPP[MAXPROCESS];           
-int PPPMax[MAXPROCESS];
-int PPPLen;
-
-char acWorkspaces[MAXPROCESS*WORKSPACE];
-
-void SWI(void);
-void Enqueue(ProcQueue* prq, ProcCtrlBlock* p);
-BOOL Dequeue(ProcQueue *prq, ProcCtrlBlock** p);
-void InitQueues();
-void Schedule(void);
-void __attribute__ ((interrupt)) contextSwitch (void);
+#include "queue.h"
 
 void idle(void)
 {
@@ -149,9 +96,6 @@ void OS_Abort()
 PID  OS_Create(void (*f)(void), int arg, unsigned int level, unsigned int n)
 {
     int idx, pid = INVALIDPID;
-    unsigned char*  stackBase;
-    unsigned char*  ccr;
-    unsigned int*   pc;
 
     if ( level == PERIODIC ) /* Checking if a name n is already taken. */
     {
@@ -171,7 +115,7 @@ PID  OS_Create(void (*f)(void), int arg, unsigned int level, unsigned int n)
             arrProcs[idx].level       = level;
             arrProcs[idx].state       = NEW;
             arrProcs[idx].argument    = arg;
-//          arrProcs[idx].sp          = acWorkspaces + (WORKSPACE*idx);
+            arrProcs[idx].sp          = acWorkspaces + (WORKSPACE*idx);
             arrProcs[idx].pc          = f;
 
             switch ( level )
@@ -189,15 +133,6 @@ PID  OS_Create(void (*f)(void), int arg, unsigned int level, unsigned int n)
             default:
                 OS_Abort();
             }
-
-            stackBase = acWorkspaces + (WORKSPACE*idx);
-            pc = (unsigned int*) stackBase - 1;
-            ccr = (unsigned char*) stackBase - 3;
-            *pc = (unsigned int) f;
-            *ccr = 0x00;
-        
-            arrProcs[idx].sp = (unsigned char*) (stackBase - 18);
-
             return pid;
         }
     }
@@ -265,7 +200,7 @@ void Schedule(void)
     unsigned int timeInMs, idx = 0;
     /* choose how long to run it for */
 
-    /* if device process is due schedule it */
+    /* TODO: if device process is due schedule it */
     if ( PPP[SchedIdx] == IDLE )
     {
         if ( Dequeue(&spoProcs, &p0) == TRUE )
@@ -275,12 +210,14 @@ void Schedule(void)
         }
         else
         {
+            /* if there are no sporadic processes then idle runs*/
             currProc = &idleProc;
         }
     }
     else
     {
-        for ( idx = 0; idx < MAXPROCESS; ++idx ) /* Searching an available block */
+        /* Searching the corresponding block to the name of the process */
+        for ( idx = 0; idx < MAXPROCESS; ++idx ) 
         {
             if (arrProcs[idx].name == PPP[SchedIdx])
             {
@@ -299,6 +236,20 @@ void Schedule(void)
     B_SET(_io_ports[TMSK1], 4);
 }
 
+void setProcessStack()
+{
+    unsigned char*  stackPointer;
+    unsigned int*   programCounter;
+
+    stackPointer = currProc->sp;
+
+//  stackPointer = ((currProc->pc) & 0x00FF)
+//  (stackPointer - 1) = ((currProc->pc) & 0xFF00) >> 8;
+    programCounter = (unsigned int*) stackPointer - 1;
+    *programCounter = (unsigned int) currProc->pc;
+    currProc->sp = (unsigned char*) (stackPointer - 18);
+}
+
 void __attribute__ ((interrupt)) contextSwitch (void)
 {
     B_SET(_io_ports[TFLG1], 4);
@@ -313,44 +264,17 @@ void __attribute__ ((interrupt)) contextSwitch (void)
 
     Schedule(); /* Selects the next process and updates the currentProcess pointer */
 
+    if ( currProc->state == NEW )
+    {
+        setProcessStack();
+        currProc->state = READY;
+    }
+
     loadSP(currProc->sp);
 
-    /* check message queue */
-
-//    if ( currProc->state == NEW )
-//    {
-//        asm volatile ("lds %0" : : "m" (currProc->sp) : "memory");
-//        currProc->state = READY;
-//        currProc->pc(); /* call the function for the first time */
-//        OS_Terminate();
-//    }
-//    else if ( currProc->state == READY  && currProc->state != TERMINATED)
-//    {
-//        asm volatile ("lds %0" : : "m" (currProc->sp) : "memory");
-////      asm volatile ("rti");  /* returning where that function was before */
-//        RTI();
-////      currProc->pc();
-////      OS_Yield();
-//    }
-//    else
-//    {
-//        SWI();
-////      asm volatile ("lds %0" : : "m" (kernSp.kernelSP) : "memory");
-////      asm volatile ("rti");
-//    }
-
-    /* Set the CPU's stack pointer so RTI can unwind the new process's stack */
-//  asm("lds %0" : : "m" (currProc->sp));
+    currProc->state = RUNNING;
 
 //  RTI();
-
-//  /* Check the message queue */
-//  if(currProc->fifo != INVALIDFIFO)
-//  {
-//  	/* Note: signals are undefined at this point */
-//  }
-//
-    currProc->state = RUNNING;
 }
 
 

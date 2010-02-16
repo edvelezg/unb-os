@@ -14,7 +14,7 @@ void spo1()
     int i;
     while ( TRUE )
     {
-        serial_print ("11111111111\n");
+        serial_print ("111111\n");
     }
 }
 
@@ -23,8 +23,7 @@ void spo2()
     int i;
     while ( TRUE )
     {
-        serial_print ("22222222222\n");
-        serial_print ("22222222222\n");
+        serial_print ("222222\n");
     }
 }
 
@@ -34,7 +33,7 @@ void per1()
 
     while ( TRUE )
     {
-        serial_print ("AAAAAAAAAAA\n");
+        serial_print ("AAAAAA\n");
     }
 }
 
@@ -42,7 +41,7 @@ void per2()
 {
     while ( TRUE )
     {
-        serial_print ("BBBBBBBBBBBBB\n");
+        serial_print ("BBBBBB\n");
     }
 }
 
@@ -86,10 +85,10 @@ int main (int argc, char *argv[])
     PPP[1] = IDLE;
     PPP[2] = 'B';
     PPP[3] = 'A';
-    PPPMax[0] = 2;
-    PPPMax[1] = 3;
+    PPPMax[0] = 4;
+    PPPMax[1] = 4;
     PPPMax[2] = 4;
-    PPPMax[3] = 5;
+    PPPMax[3] = 4;
     PPPLen = 4;
 
     OS_Start();
