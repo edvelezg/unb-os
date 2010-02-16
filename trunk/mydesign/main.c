@@ -15,7 +15,10 @@ void spo1()
     while ( TRUE )
     {
         serial_print ("111111\n");
+        serial_print ("111111\n");
+        serial_print ("111111\n");
     }
+//      OS_Terminate();
 }
 
 void spo2()
@@ -34,6 +37,7 @@ void per1()
     while ( TRUE )
     {
         serial_print ("AAAAAA\n");
+        OS_Yield();
     }
 }
 
@@ -81,15 +85,15 @@ int main (int argc, char *argv[])
     OS_Create(per1, 0, PERIODIC, 'A');
     OS_Create(per2, 0, PERIODIC, 'B');
 
-    PPP[0] = IDLE;
-    PPP[1] = IDLE;
-    PPP[2] = 'B';
-    PPP[3] = 'A';
-    PPPMax[0] = 4;
-    PPPMax[1] = 4;
-    PPPMax[2] = 4;
-    PPPMax[3] = 4;
-    PPPLen = 4;
+    PPP[0]      = IDLE;
+    PPP[1]      = IDLE;
+    PPP[2]      = 'B';
+    PPP[3]      = 'A';
+    PPPMax[0]   = 4;
+    PPPMax[1]   = 4;
+    PPPMax[2]   = 4;
+    PPPMax[3]   = 4;
+    PPPLen      = 4;
 
     OS_Start();
 
