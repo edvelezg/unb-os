@@ -79,11 +79,12 @@ void OS_Init(void)
 }
 void OS_Start(void)
 {
-    B_SET(_io_ports[TMSK1], 4);
-
-    _io_ports[TOC4] = _io_ports[TCNT] + 20000;
-
-    idle();
+//  B_SET(_io_ports[TMSK1], 4);
+//
+//  _io_ports[TOC4] = _io_ports[TCNT] + 20000;
+//
+//  idle();
+    context_switch();
 }
 
 void OS_Abort()
@@ -269,13 +270,14 @@ void __attribute__ ((interrupt)) context_switch (void)
     }
     if (TRUE)
     {
+        /* Why doesn't it work in the if statement above? */
         loadSP(currProc->sp);
     }
 
 
     currProc->state = RUNNING;
 
-//  RTI();
+//  RTI(); Why doesn't it work?
 }
 
 
