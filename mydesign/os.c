@@ -63,7 +63,7 @@ void SWI(void);
 void Enqueue(ProcQueue* prq, ProcCtrlBlock* p);
 BOOL Dequeue(ProcQueue *prq, ProcCtrlBlock** p);
 void InitQueues();
-//void Schedule(void);
+void Schedule(void);
 void __attribute__ ((interrupt)) contextSwitch (void);
 
 void idle(void)
@@ -309,12 +309,11 @@ void __attribute__ ((interrupt)) contextSwitch (void)
         currProc->state = READY;
     }
 
-    /* Save the CPU's stack pointer in the current process's control block */
-    asm("sts %0" : : "m" (currProc->sp));
+    storeSP(currProc->sp);
 
     Schedule(); /* Selects the next process and updates the currentProcess pointer */
 
-    asm("lds %0" : : "m" (currProc->sp));
+    loadSP(currProc->sp);
 
     /* check message queue */
 
