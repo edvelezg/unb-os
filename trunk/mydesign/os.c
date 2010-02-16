@@ -11,7 +11,22 @@
 #include "interrupts.h"
 #include "ports.h"
 #include "fifo.h"
-#include "queue.h"
+#include "process.h"
+//#include "semaphores.h"
+
+ProcQueue devProcs;
+ProcQueue spoProcs;
+
+int PPP[MAXPROCESS];           
+int PPPMax[MAXPROCESS];
+int PPPLen;
+
+char acWorkspaces[MAXPROCESS*WORKSPACE];
+//Semaphore semArr[MAXSEM];
+
+ProcCtrlBlock  arrProcs[MAXPROCESS];
+ProcCtrlBlock  idleProc;
+ProcCtrlBlock* currProc;
 
 void idle(void)
 {
@@ -20,7 +35,6 @@ void idle(void)
         serial_print("IIIIII\n");
     }
 }
-
 
 void OS_Yield(void)
 {
@@ -32,20 +46,34 @@ int  OS_GetParam(void)
     return currProc->argument;
 }
 
-/* Semaphore primitives */
-void OS_InitSem(int s, int n)
-{
-}
-
-
-void OS_Wait(int s)
-{
-}
-
-
-void OS_Signal(int s)
-{
-}
+//void OS_InitSem(int s, int n)
+//{
+//    semArr[s].count = n;
+//}
+//
+//void OS_Wait(int s)
+//{
+//    if ( semArr[s].count > 0 )
+//    {
+//        semArr[s].count--;
+//    }
+//    else
+//    {
+//        Enqueue(semArr[s].procQueue, currProc);
+//        /*block ()*/
+//    }
+//}
+//
+//
+//void OS_Signal(int s)
+//{
+//    semArr[s].count++;
+//    if(semArr[s].procQueue->fillCount > 0)
+//    {
+//        Dequeue(semArr[s].procQueue, &currProc);
+//        /*wakeup(P)*/
+//    }
+//}
 
 /* OS Initialization */
 void OS_Init(void)
@@ -89,7 +117,7 @@ void OS_Start(void)
 
 void OS_Abort()
 {
-    //EXIT();
+    SWI();
 }
 
 PID  OS_Create(void (*f)(void), int arg, unsigned int level, unsigned int n)
@@ -280,7 +308,6 @@ void __attribute__ ((interrupt)) context_switch (void)
 //  RTI(); Why doesn't it work?
 }
 
-
 void Enqueue(ProcQueue* prq, ProcCtrlBlock* p)
 {
     /* the queue still has space to write
@@ -323,59 +350,4 @@ void InitQueues()
     spoProcs.fillCount = 0;  
     spoProcs.next = 0;       
     spoProcs.first = 0;      
-}
-
-FIFO OS_InitFiFo()
-{
-    /* gets next available message queue */
-    if ( numFifos < MAXFIFO )
-    {
-        arrFifos[numFifos].fillCount = 0;
-        arrFifos[numFifos].next = 0;
-        arrFifos[numFifos].first = 0;
-        ++numFifos;
-        return numFifos;
-    }
-    else
-    {
-        /* ran out of message queues */
-        return INVALIDFIFO;
-    }
-}
-
-void OS_Write(FIFO f, int val)
-{
-    int idx = f - 1;
-    fifo_struct *curFifo = &arrFifos[idx];
-
-    /* the buffer still has space to write
-       if it is full writes are ignored */
-    if ( curFifo->fillCount < FIFOSIZE )
-    {
-        curFifo->buffer[curFifo->next] = val;
-        curFifo->next = (curFifo->next + 1) % FIFOSIZE;
-    }
-
-    /* increment fillcount if not full */
-    curFifo->fillCount = (curFifo->fillCount == FIFOSIZE) ? FIFOSIZE : ++curFifo->fillCount;
-}
-
-BOOL OS_Read(FIFO f, int *val)
-{
-    int idx = f - 1;
-    fifo_struct *curFifo = &arrFifos[idx];
-
-    /* the buffer is empty */
-    if ( curFifo->fillCount <= 0 )
-    {
-        return FALSE;
-    }
-    /* there are still elements in the buffer */
-    else
-    {
-        *val = curFifo->buffer[curFifo->first];
-        curFifo->first = (curFifo->first + 1) % FIFOSIZE;
-        curFifo->fillCount--;
-        return TRUE;
-    }
 }
