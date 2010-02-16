@@ -3,11 +3,7 @@
 
 typedef void (*interrupt_t) (void);
 
-//#if GDB
-    #define VECTOR_BASE     0xFFC0
-//#else
-//    #define VECTOR_BASE     0xBFC0
-//#endif
+#define VECTOR_BASE     0xFFC0
 
 #define TOC5V   *(interrupt_t *)(VECTOR_BASE + 0x20) /* TOC 5 */
 #define TOC4V   *(interrupt_t *)(VECTOR_BASE + 0x22) /* TOC 4 */
@@ -19,12 +15,7 @@ typedef void (*interrupt_t) (void);
 #define IC1V    *(interrupt_t *)(VECTOR_BASE + 0x2E) /* IC1 */
 #define RTIV    *(interrupt_t *)(VECTOR_BASE + 0x30) /* RTI */
 #define SWIV    *(interrupt_t *)(VECTOR_BASE + 0x36) /* SWI */
-#define TMSK1   *(volatile int *)(VECTOR_BASE + 0x22)
-#define TFLG1   *(volatile int *)(VECTOR_BASE + 0x23)
-#define TMSK2   *(volatile int *)(VECTOR_BASE + 0x24)
-/* reset vector *(interrupt_t *)table entry */
-//#define RESETV  *(interrupt_t *)(*(interrupt_t *)(VECTOR_BASE + 0x3E))
-
+#define RESETV  *(interrupt_t *) (VECTOR_BASE + 0x3E))
 
 /* source: http://www.catonmat.net/blog/bit-hacks-header-file/ */
 /* set n-th bit in x */

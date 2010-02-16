@@ -12,94 +12,37 @@ void foo()
 void spo1()
 {
     int i;
-    serial_print ("I'm in Spo1()!\n");
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
+    while ( TRUE )
+    {
+        serial_print ("11111111111\n");
+    }
 }
 
 void spo2()
 {
     int i;
-    serial_print ("I'm in Spo2()!\n");
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
+    while ( TRUE )
+    {
+        serial_print ("22222222222\n");
+        serial_print ("22222222222\n");
+    }
 }
 
 void per1()
 {
     int i;
 
-    while ( 1 )
+    while ( TRUE )
     {
-        serial_print ("I'm in PerA() Part 1!\n");
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        OS_Yield();
-        serial_print ("I'm in PerA Part 2()!\n");
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
+        serial_print ("AAAAAAAAAAA\n");
     }
 }
 
 void per2()
 {
-    while ( 1 )
+    while ( TRUE )
     {
-        int i;
-        serial_print ("I'm in PerB()!\n");
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        OS_Yield();
+        serial_print ("BBBBBBBBBBBBB\n");
     }
 }
 
@@ -124,8 +67,6 @@ void serial_print (char *msg)
 
 int main (int argc, char *argv[])
 {
-    int my_var, my_int;
-
     /* Configure the SCI to send at M6811_DEF_BAUD baud.  */
     _io_ports[M6811_BAUD] = M6811_DEF_BAUD;
 
@@ -135,13 +76,6 @@ int main (int argc, char *argv[])
     /* Enable receiver and transmitter.  */
     _io_ports[M6811_SCCR2] = M6811_TE | M6811_RE;
 
-    /**
-     *   The PPP[] array is a sequence of names which specifies the execution
-     *   order of all PERIODIC processes. The name of every PERIODIC
-     *   process must appear in PPP[] array at least once, but may be more 
-     *   than once.
-     */
-//  OS_DI();
     OS_Init();
     OS_Create(spo1, 0, SPORADIC, 1);
     OS_Create(spo2, 0, SPORADIC, 1);
