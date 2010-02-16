@@ -21,7 +21,9 @@ int PPP[MAXPROCESS];
 int PPPMax[MAXPROCESS];
 int PPPLen;
 
-char acWorkspaces[MAXPROCESS*WORKSPACE];
+// plus one workspace for the idle process.
+char acWorkspaces[MAXPROCESS*WORKSPACE]; 
+char idleWorkspace[WORKSPACE];
 //Semaphore semArr[MAXSEM];
 
 ProcCtrlBlock  arrProcs[MAXPROCESS];
@@ -79,6 +81,10 @@ int  OS_GetParam(void)
 void OS_Init(void)
 {
     int i;
+
+    unsigned char*  stackPointer;
+    unsigned int*   programCounter;
+
     /* Initialize PCBs */
     for ( i = 0; i < MAXPROCESS; ++i )
     {
@@ -89,18 +95,27 @@ void OS_Init(void)
         arrProcs[i].pc           = 0;
     }
 
-    /* Initialize idle process */
-    idleProc.level     = PERIODIC;
-    idleProc.state     = READY;
-    idleProc.argument  = 0;
-    /* TODO: does it need a workspace?*/
-    idleProc.pc        = idle;
 
     InitQueues();
     /* TODO: determine quantum I can hardcore that */
     /* TODO: use the same hw setup interrupt ot increment a timer */
     /* TODO: enable interrupts? */
+
+
+    /* Initialize idle process Control Block */
+    idleProc.level     = 5;
+    idleProc.state     = NEW;
+    idleProc.argument  = 0;
+    idleProc.sp        = &idleWorkspace[WORKSPACE - 1];
+    idleProc.pc        = idle;
+
     currProc = &idleProc;
+
+    /* initialize the stack for the idle process*/
+//  stackPointer = currProc->sp;
+//  programCounter = (unsigned int*) stackPointer - 1;
+//  *programCounter = (unsigned int) currProc->pc;
+//  currProc->sp = (unsigned char*) (stackPointer - 18);
 
     SWIV  = context_switch;
 	TOC4V = context_switch;
@@ -142,7 +157,7 @@ PID  OS_Create(void (*f)(void), int arg, unsigned int level, unsigned int n)
             arrProcs[idx].level       = level;
             arrProcs[idx].state       = NEW;
             arrProcs[idx].argument    = arg;
-            arrProcs[idx].sp          = acWorkspaces + (WORKSPACE*idx);
+            arrProcs[idx].sp          = acWorkspaces + (WORKSPACE*pid);
             arrProcs[idx].pc          = f;
 
             switch ( level )
