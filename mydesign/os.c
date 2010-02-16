@@ -17,6 +17,7 @@ void idle(void)
 {
     while ( TRUE )
     {
+        serial_print("IIIIII\n");
     }
 }
 
@@ -73,8 +74,8 @@ void OS_Init(void)
     /* TODO: enable interrupts? */
     currProc = &idleProc;
 
-//  SWIV  = contextSwitch;
-	TOC4V = contextSwitch;
+    SWIV  = context_switch;
+	TOC4V = context_switch;
 }
 void OS_Start(void)
 {
@@ -82,10 +83,7 @@ void OS_Start(void)
 
     _io_ports[TOC4] = _io_ports[TCNT] + 20000;
 
-    while ( TRUE )
-    {
-        serial_print("can't get out of here!\n");
-    }
+    idle();
 }
 
 void OS_Abort()
@@ -194,7 +192,7 @@ void OS_Terminate(void)
 
 void Schedule(void)
 {
-    static int SchedIdx;
+    static unsigned int SchedIdx = 0;
     ProcCtrlBlock *p0; /* choose next process to run */
     BOOL found = FALSE; 
     unsigned int timeInMs, idx = 0;
@@ -228,7 +226,7 @@ void Schedule(void)
     }    
 
     timeInMs = PPPMax[SchedIdx];
-    SchedIdx = (SchedIdx == PPPLen - 1) ? 0 : SchedIdx + 1;
+    SchedIdx = (SchedIdx + 1) % PPPLen;
 
     _io_ports[TOC4] = _io_ports[TCNT] + timeInMs * 2000;
 
@@ -250,7 +248,7 @@ void setProcessStack()
     currProc->sp = (unsigned char*) (stackPointer - 18);
 }
 
-void __attribute__ ((interrupt)) contextSwitch (void)
+void __attribute__ ((interrupt)) context_switch (void)
 {
     B_SET(_io_ports[TFLG1], 4);
     B_UNSET(_io_ports[TMSK1], 4);
@@ -269,8 +267,11 @@ void __attribute__ ((interrupt)) contextSwitch (void)
         setProcessStack();
         currProc->state = READY;
     }
+    if (TRUE)
+    {
+        loadSP(currProc->sp);
+    }
 
-    loadSP(currProc->sp);
 
     currProc->state = RUNNING;
 
