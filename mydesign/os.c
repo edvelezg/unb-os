@@ -30,13 +30,7 @@ ProcCtrlBlock  arrProcs[MAXPROCESS];
 ProcCtrlBlock  idleProc;
 ProcCtrlBlock* currProc;
 
-void idle(void)
-{
-    while ( TRUE )
-    {
-        serial_print("IIIIII\n");
-    }
-}
+void timeToPreempt(unsigned int);
 
 void OS_Yield(void)
 {
@@ -97,19 +91,6 @@ void OS_Init(void)
 
 
     InitQueues();
-    /* TODO: determine quantum I can hardcore that */
-    /* TODO: use the same hw setup interrupt ot increment a timer */
-    /* TODO: enable interrupts? */
-
-
-    /* Initialize idle process Control Block */
-    idleProc.level     = 5;
-    idleProc.state     = NEW;
-    idleProc.argument  = 0;
-    idleProc.sp        = &idleWorkspace[WORKSPACE - 1];
-    idleProc.pc        = idle;
-
-    currProc = &idleProc;
 
     /* initialize the stack for the idle process*/
 //  stackPointer = currProc->sp;
@@ -122,12 +103,23 @@ void OS_Init(void)
 }
 void OS_Start(void)
 {
-//  B_SET(_io_ports[TMSK1], 4);
-//
-//  _io_ports[TOC4] = _io_ports[TCNT] + 20000;
-//
+
+    /* Initialize idle process Control Block */
+    idleProc.pid = IDLE;
+    idleProc.state = RUNNING;
+
+    currProc = &idleProc;
+
+    B_SET(_io_ports[TMSK1], 4);
+
+    _io_ports[TOC4] = _io_ports[TCNT] + 20000;
+    
+    while ( TRUE )
+    {
+        serial_print("IIIIII\n");
+    }
 //  idle();
-    context_switch();
+//  context_switch();
 }
 
 void OS_Abort()
@@ -138,7 +130,6 @@ void OS_Abort()
 PID  OS_Create(void (*f)(void), int arg, unsigned int level, unsigned int n)
 {
     int idx, pid = INVALIDPID;
-
     if ( level == PERIODIC ) /* Checking if a name n is already taken. */
     {
         for ( idx = 0; idx < MAXPROCESS; ++idx )
@@ -239,7 +230,8 @@ void Schedule(void)
     static unsigned int SchedIdx = 0;
     ProcCtrlBlock *p0; /* choose next process to run */
     BOOL found = FALSE; 
-    unsigned int timeInMs, idx = 0;
+    unsigned int idx = 0;
+    unsigned int timeInMs;
     /* choose how long to run it for */
 
     /* TODO: if device process is due schedule it */
@@ -268,12 +260,19 @@ void Schedule(void)
             }
         }
     }    
-
+    
     timeInMs = PPPMax[SchedIdx];
     SchedIdx = (SchedIdx + 1) % PPPLen;
+//  timeToPreempt(timeInMs);
 
     _io_ports[TOC4] = _io_ports[TCNT] + timeInMs * 2000;
+    /* Set the bomb */
+    B_SET(_io_ports[TMSK1], 4);
+}
 
+void timeToPreempt(unsigned int timeInMs)
+{
+    _io_ports[TOC4] = _io_ports[TCNT] + timeInMs * 2000;
     /* Set the bomb */
     B_SET(_io_ports[TMSK1], 4);
 }
