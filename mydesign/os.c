@@ -99,7 +99,7 @@ void OS_Init(void)
 //  currProc->sp = (unsigned char*) (stackPointer - 18);
 
     SWIV  = context_switch;
-	TOC4V = context_switch;
+    TOC4V = context_switch;
 }
 void OS_Start(void)
 {
@@ -184,6 +184,7 @@ void RTI()
 
 void OS_Terminate(void)
 {
+    OS_DI();
     currProc->state = TERMINATED;
     currProc->name = -1;
     currProc->frequency = 0;
@@ -251,9 +252,9 @@ void Schedule(void)
     else
     {
         /* Searching the corresponding block to the name of the process */
-        for ( idx = 0; idx < MAXPROCESS; ++idx ) 
+        for ( idx = 0; idx < MAXPROCESS; ++idx )
         {
-            if (arrProcs[idx].name == PPP[SchedIdx])
+            if ( arrProcs[idx].name == PPP[SchedIdx] )
             {
                 currProc = &arrProcs[idx];
                 break;
@@ -265,7 +266,7 @@ void Schedule(void)
     SchedIdx = (SchedIdx + 1) % PPPLen;
 //  timeToPreempt(timeInMs);
 
-    _io_ports[TOC4] = _io_ports[TCNT] + timeInMs * 2000;
+    _io_ports[TOC4] = _io_ports[TCNT] + timeInMs * TICKS_IN_MS;
     /* Set the bomb */
     B_SET(_io_ports[TMSK1], 4);
 }
@@ -290,8 +291,7 @@ void setProcessStack()
     *programCounter = (unsigned int) currProc->pc;
     currProc->sp = (unsigned char*) (stackPointer - 18);
 }
-
-void __attribute__ ((interrupt)) context_switch (void)
+__attribute__ ((interrupt)) void context_switch (void)
 {
     B_SET(_io_ports[TFLG1], 4);
     B_UNSET(_io_ports[TMSK1], 4);
@@ -301,25 +301,19 @@ void __attribute__ ((interrupt)) context_switch (void)
         currProc->state = READY;
     }
 
-    storeSP(currProc->sp);
+    asm volatile ("sts %0" : "=m" (currProc->sp) : : "memory" ); 
 
-    Schedule(); /* Selects the next process and updates the currentProcess pointer */
+    Schedule(); /* selects the next process and updates the */
 
     if ( currProc->state == NEW )
     {
         setProcessStack();
         currProc->state = READY;
     }
-    if (TRUE)
-    {
-        /* Why doesn't it work in the if statement above? */
-        loadSP(currProc->sp);
-    }
 
+    asm volatile ("lds %0" : : "m" (currProc->sp) : "memory");
 
     currProc->state = RUNNING;
-
-//  RTI(); Why doesn't it work?
 }
 
 void Enqueue(ProcQueue* prq, ProcCtrlBlock* p)

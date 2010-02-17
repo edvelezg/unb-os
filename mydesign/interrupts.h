@@ -25,8 +25,8 @@ typedef void (*interrupt_t) (void);
 /* toggle n-th bit in x */
 #define B_TOGGLE(x, n)   ((x) ^= (1<<(n)))
 
-#define storeSP(sp) asm("sts %0" : : "m"(sp))
-#define loadSP(sp) asm("lds %0" : : "m"(sp))
+#define storeSP(sp) asm volatile ("sts %0" : "=m" (sp) : : "memory" )
+#define loadSP(sp) asm volatile ("lds %0" : : "m" (sp) : "memory")
 
 void sys_print_lcd(char* text);
 void _sys_init_lcd(void);

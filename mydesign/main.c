@@ -37,7 +37,7 @@ void per1()
     while ( TRUE )
     {
         serial_print ("AAAAAA\n");
-        OS_Yield();
+//      OS_Yield();
     }
 }
 
@@ -66,7 +66,6 @@ void serial_print (char *msg)
     while ( *msg != 0 )
         serial_send (*msg++);
 }
-
 
 int main (int argc, char *argv[])
 {
