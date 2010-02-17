@@ -4,10 +4,13 @@
 void serial_print (char *msg);
 static inline void serial_send (char c);
 
-void foo()
-{
-    /* do nothing */
-}
+//void idle(void)
+//{
+//    while ( TRUE )
+//    {
+//        serial_print("IIIIII\n");
+//    }
+//}
 
 void spo1()
 {
@@ -15,10 +18,7 @@ void spo1()
     while ( TRUE )
     {
         serial_print ("111111\n");
-        serial_print ("111111\n");
-        serial_print ("111111\n");
     }
-//      OS_Terminate();
 }
 
 void spo2()
@@ -87,11 +87,11 @@ int main (int argc, char *argv[])
 
     PPP[0]      = IDLE;
     PPP[1]      = IDLE;
-    PPP[2]      = 'B';
-    PPP[3]      = 'A';
-    PPPMax[0]   = 4;
-    PPPMax[1]   = 4;
-    PPPMax[2]   = 4;
+    PPP[2]      = 'A';
+    PPP[3]      = 'B';
+    PPPMax[0]   = 2;
+    PPPMax[1]   = 5;
+    PPPMax[2]   = 5;
     PPPMax[3]   = 4;
     PPPLen      = 4;
 
