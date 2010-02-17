@@ -148,7 +148,7 @@ PID  OS_Create(void (*f)(void), int arg, unsigned int level, unsigned int n)
             arrProcs[idx].level       = level;
             arrProcs[idx].state       = NEW;
             arrProcs[idx].argument    = arg;
-            arrProcs[idx].sp          = acWorkspaces + (WORKSPACE*pid);
+            arrProcs[idx].sp          = (unsigned int*) (acWorkspaces + (WORKSPACE*pid));
             arrProcs[idx].pc          = f;
 
             switch ( level )
@@ -280,7 +280,7 @@ void timeToPreempt(unsigned int timeInMs)
 
 void setProcessStack()
 {
-    unsigned char*  stackPointer;
+    unsigned int*  stackPointer;
     unsigned int*   programCounter;
 
     stackPointer = currProc->sp;
@@ -289,7 +289,7 @@ void setProcessStack()
 //  (stackPointer - 1) = ((currProc->pc) & 0xFF00) >> 8;
     programCounter = (unsigned int*) stackPointer - 1;
     *programCounter = (unsigned int) currProc->pc;
-    currProc->sp = (unsigned char*) (stackPointer - 18);
+    currProc->sp = (unsigned int*) (stackPointer - 9);
 }
 __attribute__ ((interrupt)) void context_switch (void)
 {
