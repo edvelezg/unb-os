@@ -121,6 +121,7 @@ void OS_Init(void)
     idleProc.level     = PERIODIC;
     idleProc.state     = READY;
     idleProc.argument  = 0;
+    /* TODO: does it need a workspace?*/
     idleProc.pc        = idle;
 
     InitQueues();
@@ -129,7 +130,7 @@ void OS_Init(void)
     /* TODO: enable interrupts? */
 
     SWIV  = context_switch_to_process;
-	TOC4V = context_switch_to_process;
+	TOCV4 = context_switch_to_process;
 }
 void OS_Start(void)
 {
@@ -137,6 +138,11 @@ void OS_Start(void)
      * If no task is running, and all tasks are not in the ready 
      * state, the idle task executes 
      * */ 
+	
+//	B_SET(_io_ports[TMSK1], 4);
+
+//    _io_ports[TOC4] = _io_ports[TCNT] + 20000;
+
     while ( 1 )
     {
         Schedule();
@@ -201,6 +207,7 @@ void SWI()
 
 void OS_Terminate(void)
 {
+	OS_DI();
     currProc->state = TERMINATED;
     currProc->name = -1;
     currProc->frequency = 0;
@@ -275,6 +282,7 @@ void Schedule(void)
     }    
     scheduleIdx = (scheduleIdx + 1) % PPPLen;
 
+	timeToPreempt();
     /* context switch to process */
     if ( currProc != 0 )
     {
@@ -285,13 +293,17 @@ void Schedule(void)
 
 void context_switch_to_kernel (void)
 {
+	OS_DI();
     /* coudl also do ins ins */
     asm volatile ("sts %0" : "=m" (currProc->sp) : : "memory" ); 
+
+	/* clear OC4I and OC4F  0TMSK1 */
+
     currProc->sp += 2;
 
-    asm volatile ("lds %0" : : "m" (kernSp.kernelSP) : "memory");
+	SWIV = context_switch_to_process;
 
-    SWIV = context_switch_to_process;
+    asm volatile ("lds %0" : : "m" (kernSp.kernelSP) : "memory");
 
     asm volatile ("rti");  /* returning where the kernel was before */
 }
@@ -308,7 +320,8 @@ void context_switch_to_process (void)
     {
         asm volatile ("lds %0" : : "m" (currProc->sp) : "memory");
         currProc->state = READY;
-        currProc->pc(); /* call the function for the first time */
+		OS_EI();
+		currProc->pc(); /* call the function for the first time */
         OS_Terminate();
     }
     else if ( currProc->state == READY )
@@ -425,20 +438,3 @@ BOOL OS_Read(FIFO f, int *val)
     }
 }
 
-unsigned int timeToPreempt()
-{
-	unsigned int currTime;
-	unsigned int timeToPreempt;
-	unsigned int *myP;
-	myP = (unsigned int *)&_io_ports[M6811_TCNT_HIGH];
-	currTime = *myP;
-	timeToPreempt = currTime + PPPMax[scheduleIdx] * TICKS_IN_MS;
-
-	myP = (unsigned int * )&_io_ports[M6811_TOC4_HIGH];
-	*myP = timeToPreempt;
-
-	B_SET(_io_ports[M6811_TMSK1], 4);
-	B_SET(_io_ports[M6811_TFLG1], 4);
-
-	/* TODO: if the time is greater than the next device process then I will preempt before */
-}
