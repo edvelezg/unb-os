@@ -69,16 +69,16 @@ void InitQueues();
 void Schedule(void);
 void context_switch_to_kernel (void);
 void context_switch_to_process (void);
+void timeToPreempt(unsigned int);
+void preemptionHandler (void); 
 
 void idle()
 {
-//  printf("idle %d \n", -1);
 }
 
 
 void OS_Yield(void)
 {
-//  Enqueue(&spoProcs, currProc);
     SWIV = context_switch_to_kernel;
     SWI();
 }
@@ -125,12 +125,9 @@ void OS_Init(void)
     idleProc.pc        = idle;
 
     InitQueues();
-    /* TODO: determine quantum I can hardcore that */
-    /* TODO: use the same hw setup interrupt ot increment a timer */
-    /* TODO: enable interrupts? */
 
     SWIV  = context_switch_to_process;
-	TOCV4 = context_switch_to_process;
+//  TOCV4 = context_switch_to_process;
 }
 void OS_Start(void)
 {
@@ -139,9 +136,9 @@ void OS_Start(void)
      * state, the idle task executes 
      * */ 
 	
-//	B_SET(_io_ports[TMSK1], 4);
-
-//    _io_ports[TOC4] = _io_ports[TCNT] + 20000;
+//  B_SET(_io_ports[TMSK1], 4);
+//
+//  _io_ports[TOC4] = _io_ports[TCNT] + 20000;
 
     while ( 1 )
     {
@@ -280,13 +277,14 @@ void Schedule(void)
             }
         }
     }    
-    scheduleIdx = (scheduleIdx + 1) % PPPLen;
 
-	timeToPreempt();
+    unsigned int timeInMs = PPPMax[scheduleIdx];
+//  timeToPreempt(PPPMax[scheduleIdx]);
+
+    scheduleIdx = (scheduleIdx + 1) % PPPLen;
     /* context switch to process */
     if ( currProc != 0 )
     {
-
         SWI(); /* triggers context_switch */
     }
 }
@@ -436,5 +434,12 @@ BOOL OS_Read(FIFO f, int *val)
         curFifo->fillCount--;
         return TRUE;
     }
+}
+
+void timeToPreempt(unsigned int timeInMs)
+{
+    _io_ports[TOC4] = _io_ports[TCNT] + timeInMs * 2000;
+    /* Set the bomb */
+    B_SET(_io_ports[TMSK1], 4);
 }
 

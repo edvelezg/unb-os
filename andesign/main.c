@@ -27,7 +27,7 @@ void spo1()
         for ( i = 1; i != 0 ; ++i );
         for ( i = 1; i != 0 ; ++i );
         for ( i = 1; i != 0 ; ++i );
-        OS_Yield();
+		OS_Yield();
     }
 }
 
@@ -87,6 +87,7 @@ void per1()
         for ( i = 1; i != 0 ; ++i );
         for ( i = 1; i != 0 ; ++i );
         for ( i = 1; i != 0 ; ++i );
+//  	OS_Yield();
     }
 }
 
