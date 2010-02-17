@@ -38,6 +38,7 @@ void Enqueue(ProcQueue* prq, ProcCtrlBlock* p);
 BOOL Dequeue(ProcQueue *prq, ProcCtrlBlock** p);
 void InitQueues();
 void Schedule(void);
-void __attribute__ ((interrupt)) context_switch (void);
+/* __attribute__ ((interrupt)) */
+void context_switch (void);
 
 #endif /* _PROCESS_H_ */
