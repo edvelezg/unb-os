@@ -21,9 +21,8 @@ int PPP[MAXPROCESS];
 int PPPMax[MAXPROCESS];
 int PPPLen;
 
-// plus one workspace for the idle process.
 char acWorkspaces[MAXPROCESS*WORKSPACE]; 
-char idleWorkspace[WORKSPACE];
+char idleWorkspace[WORKSPACE/4];
 Semaphore semArr[2];
 
 ProcCtrlBlock  arrProcs[MAXPROCESS];
@@ -102,19 +101,17 @@ void idle ( void )
 }
 void OS_Start(void)
 {
-
     /* Initialize idle process Control Block */
     idleProc.pid = IDLE;
-    idleProc.state = RUNNING;
+    idleProc.state = NEW;
+    idleProc.pc = &idle;
+    idleProc.sp = (unsigned int*) (idleWorkspace + WORKSPACE/4);
 
-    currProc = &idleProc;
+    currProc = 0;
 
-    B_SET(_io_ports[TMSK1], 4);
-
-    _io_ports[TOC4] = _io_ports[TCNT] + 20000;
-    
-    idle();
-//  context_switch();
+    context_switch();
+//  Schedule();
+//  SWI();
 }
 
 void OS_Abort()
@@ -297,8 +294,10 @@ __attribute__ ((interrupt)) void context_switch (void)
     {
         currProc->state = READY;
     }
-
-    asm volatile ("sts %0" : "=m" (currProc->sp) : : "memory" ); 
+    if ( currProc != 0 )
+    {
+        asm volatile ("sts %0" : "=m" (currProc->sp) : : "memory" ); 
+    }
 
     Schedule(); /* selects the next process and updates the */
 
