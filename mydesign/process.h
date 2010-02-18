@@ -14,7 +14,7 @@ typedef struct pcb_struct
     int         level;
     States      state;
     int         argument; /* argument */
-    int        *sp; /* stack pointer */
+    int         *sp; /* stack pointer */
     void        (*pc)(void); // function pointer
     int         frequency;
     int         name;

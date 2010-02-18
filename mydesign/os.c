@@ -76,9 +76,6 @@ void OS_Init(void)
 {
     int i;
 
-    unsigned char*  stackPointer;
-    unsigned int*   programCounter;
-
     /* Initialize PCBs */
     for ( i = 0; i < MAXPROCESS; ++i )
     {
@@ -91,12 +88,6 @@ void OS_Init(void)
 
 
     InitQueues();
-
-    /* initialize the stack for the idle process*/
-//  stackPointer = currProc->sp;
-//  programCounter = (unsigned int*) stackPointer - 1;
-//  *programCounter = (unsigned int) currProc->pc;
-//  currProc->sp = (unsigned char*) (stackPointer - 18);
 
     SWIV  = context_switch;
     TOC4V = context_switch;
@@ -273,7 +264,7 @@ void Schedule(void)
 
 void timeToPreempt(unsigned int timeInMs)
 {
-    _io_ports[TOC4] = _io_ports[TCNT] + timeInMs * 2000;
+    _io_ports[TOC4] = _io_ports[TCNT] + timeInMs * TICKS_IN_MS;
     /* Set the bomb */
     B_SET(_io_ports[TMSK1], 4);
 }
@@ -281,14 +272,26 @@ void timeToPreempt(unsigned int timeInMs)
 void setProcessStack()
 {
     unsigned int*  stackPointer;
-    unsigned int*   programCounter;
+//  unsigned char *sp, t;
+
+    /* store lo byte */
+//  t = (unsigned) pf & 0xff;
+//  sp = (unsigned char *) t;
+
+    /* store hi byte */
+//  t = (unsigned) pf >> 8;
+//  sp = (unsigned char *) t;
 
     stackPointer = currProc->sp;
 
 //  stackPointer = ((currProc->pc) & 0x00FF)
 //  (stackPointer - 1) = ((currProc->pc) & 0xFF00) >> 8;
-    programCounter = (unsigned int*) stackPointer - 1;
-    *programCounter = (unsigned int) currProc->pc;
+
+    *(unsigned int*)(stackPointer - 1) = (unsigned int) currProc->pc;
+
+//  programCounter = (unsigned char*) stackPointer - 1;
+//  *programCounter = (unsigned int) currProc->pc;
+
     currProc->sp = (unsigned int*) (stackPointer - 9);
 }
 __attribute__ ((interrupt)) void context_switch (void)
