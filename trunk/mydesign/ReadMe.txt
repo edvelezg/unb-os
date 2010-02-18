@@ -1,8 +1,10 @@
 To compile the Operating system:
 Run the build.bat file. Make sure you have the m6811 tools installed or if installed
 in path other than /usr/bin, change accordingly.
+
 To Test the Operating Sytem:
-Run the test.bat file
+Run the test.bat file and edit the main function.
+
 
 Basic Tests:
 Run with no sporadic processes
