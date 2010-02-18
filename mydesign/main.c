@@ -79,8 +79,8 @@ int main (int argc, char *argv[])
 
     /* main() can then create processes and initialize the PPP[] and PPPMax[] arrays */
 
-    OS_Create(spo1, 0, SPORADIC, 1);
-    OS_Create(spo2, 0, SPORADIC, 1);
+//  OS_Create(spo1, 0, SPORADIC, 1);
+//  OS_Create(spo2, 0, SPORADIC, 1);
     OS_Create(per1, 0, PERIODIC, 'A');
     OS_Create(per2, 0, PERIODIC, 'B');
 
