@@ -59,14 +59,22 @@ void OS_Wait(int s)
     }
 }
 
-
 void OS_Signal(int s)
 {
     semArr[s].count++;
-    if(semArr[s].procQueue->fillCount > 0)
+    if ( semArr[s].procQueue->fillCount > 0 )
     {
         Dequeue(semArr[s].procQueue, &currProc);
         /*wakeup(P)*/
+    }
+}
+
+/* idle process */
+void idle ( void )
+{
+    while ( TRUE )
+    {
+        serial_print("IIIIII\n");
     }
 }
 
@@ -85,33 +93,24 @@ void OS_Init(void)
         arrProcs[i].pc           = 0;
     }
 
-
-    InitQueues();
-
-    SWIV  = context_switch;
-    TOC4V = context_switch;
-}
-void idle ( void )
-{
-    /* idle process */
-    while ( TRUE )
-    {
-        serial_print("IIIIII\n");
-    }
-}
-void OS_Start(void)
-{
     /* Initialize idle process Control Block */
     idleProc.pid = IDLE;
     idleProc.state = NEW;
     idleProc.pc = &idle;
     idleProc.sp = (unsigned int*) (idleWorkspace + WORKSPACE/4);
 
+    InitQueues();
+
+    SWIV  = context_switch;
+    TOC4V = context_switch;
+}
+
+void OS_Start(void)
+{
+
     currProc = 0;
 
     context_switch();
-//  Schedule();
-//  SWI();
 }
 
 void OS_Abort()
@@ -215,6 +214,7 @@ void OS_Terminate(void)
             }
         }
     }
+    /* TODO: handle case when process is periodic*/
     SWI();
 }
 
@@ -227,7 +227,15 @@ void Schedule(void)
     unsigned int timeInMs;
     /* choose how long to run it for */
 
-    /* TODO: if device process is due schedule it */
+    while ( idx < devProcs.fillCount )
+    {
+        if ( Dequeue(&devProcs, &p0) == TRUE )
+        {
+            Enqueue(&devProcs, p0);
+            idx += 1;
+        }
+    }
+
     if ( PPP[SchedIdx] == IDLE )
     {
         if ( Dequeue(&spoProcs, &p0) == TRUE )
@@ -253,7 +261,7 @@ void Schedule(void)
             }
         }
     }    
-    
+
     timeInMs = PPPMax[SchedIdx];
     SchedIdx = (SchedIdx + 1) % PPPLen;
 
@@ -299,7 +307,7 @@ __attribute__ ((interrupt)) void context_switch (void)
         asm volatile ("sts %0" : "=m" (currProc->sp) : : "memory" ); 
     }
 
-    Schedule(); /* selects the next process and updates the */
+    Schedule(); /* selects the next process due to run */
 
     if ( currProc->state == NEW )
     {

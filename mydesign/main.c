@@ -6,18 +6,23 @@ static inline void serial_send (char c);
 
 void spo1()
 {
-    while ( TRUE )
-    {
         serial_print ("111111\n");
-    }
+        serial_print ("111111\n");
+        serial_print ("111111\n");
+        serial_print ("111111\n");
+        serial_print ("111111\n");
+        serial_print ("111111\n");
+        OS_Terminate();
 }
 
 void spo2()
 {
-    while ( TRUE )
-    {
         serial_print ("222222\n");
-    }
+        serial_print ("222222\n");
+        serial_print ("222222\n");
+        serial_print ("222222\n");
+        serial_print ("222222\n");
+        OS_Terminate();
 }
 
 void per1()
@@ -45,6 +50,22 @@ void per2()
     while ( TRUE )
     {
         serial_print ("BBBBBB\n");
+    }
+}
+
+void dev1()
+{
+    while ( TRUE )
+    {
+        serial_print ("DDDDDD\n");
+    }
+}
+
+void dev2()
+{
+    while ( TRUE )
+    {
+        serial_print ("dddddd\n");
     }
 }
 
@@ -79,10 +100,12 @@ int main (int argc, char *argv[])
 
     /* main() can then create processes and initialize the PPP[] and PPPMax[] arrays */
 
-//  OS_Create(spo1, 0, SPORADIC, 1);
-//  OS_Create(spo2, 0, SPORADIC, 1);
+    OS_Create(spo1, 0, SPORADIC, 1);
+    OS_Create(spo2, 0, SPORADIC, 1);
     OS_Create(per1, 0, PERIODIC, 'A');
     OS_Create(per2, 0, PERIODIC, 'B');
+    OS_Create(dev1, 0, DEVICE, 16);
+    OS_Create(dev2, 0, DEVICE, 16);
 
     PPP[0]      = 'A';
     PPP[1]      = IDLE;
