@@ -150,6 +150,7 @@ PID  OS_Create(void (*f)(void), int arg, unsigned int level, unsigned int n)
             case DEVICE:
                 Enqueue(&devProcs, &arrProcs[idx]);
                 arrProcs[idx].frequency = n;
+                arrProcs[idx].countDown = n;
                 break;
             case PERIODIC:
                 arrProcs[idx].name = n;
@@ -218,6 +219,11 @@ void OS_Terminate(void)
     SWI();
 }
 
+void isDevProcDue()
+{
+
+}
+
 void Schedule(void)
 {
     static unsigned int SchedIdx = 0;
@@ -226,46 +232,64 @@ void Schedule(void)
     unsigned int idx = 0;
     unsigned int timeInMs;
     /* choose how long to run it for */
-
+    timeInMs = PPPMax[SchedIdx];
+    //(devProcs.procRefs[1]->timeRemaining)
     while ( idx < devProcs.fillCount )
     {
         if ( Dequeue(&devProcs, &p0) == TRUE )
         {
+            /* device process is due to run */
+            if ( p0->countDown <= 0 )
+            {
+                found = TRUE;
+                p0->countDown = p0->frequency;
+                currProc = p0;
+                Enqueue(&devProcs, p0);
+                break;
+            }
+            else 
+            {
+                p0->countDown -= timeInMs;
+//              if ( p0->timeRemaining < 0 )
+//              {
+//                  timeInMs += p0->timeRemaining;
+//              }
+            }
             Enqueue(&devProcs, p0);
             idx += 1;
         }
     }
-
-    if ( PPP[SchedIdx] == IDLE )
+    if ( found == FALSE )
     {
-        if ( Dequeue(&spoProcs, &p0) == TRUE )
+        if ( PPP[SchedIdx] == IDLE )
         {
-            currProc = p0;
-            Enqueue(&spoProcs, p0);
+            if ( Dequeue(&spoProcs, &p0) == TRUE )
+            {
+                currProc = p0;
+                Enqueue(&spoProcs, p0);
+            }
+            else
+            {
+                /* if there are no sporadic processes then idle runs*/
+                currProc = &idleProc;
+            }
         }
         else
         {
-            /* if there are no sporadic processes then idle runs*/
-            currProc = &idleProc;
-        }
-    }
-    else
-    {
-        /* Searching the corresponding block to the name of the process */
-        for ( idx = 0; idx < MAXPROCESS; ++idx )
-        {
-            if ( arrProcs[idx].name == PPP[SchedIdx] )
+            /* Searching the corresponding block to the name of the process */
+            for ( idx = 0; idx < MAXPROCESS; ++idx )
             {
-                currProc = &arrProcs[idx];
-                break;
+                if ( arrProcs[idx].name == PPP[SchedIdx] )
+                {
+                    currProc = &arrProcs[idx];
+                    break;
+                }
             }
-        }
-    }    
+        }    
 
-    timeInMs = PPPMax[SchedIdx];
-    SchedIdx = (SchedIdx + 1) % PPPLen;
-
-    timeToPreempt(timeInMs);
+        SchedIdx = (SchedIdx + 1) % PPPLen;
+        timeToPreempt(timeInMs);
+    }
 }
 
 void timeToPreempt(unsigned int timeInMs)
