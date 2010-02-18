@@ -4,17 +4,8 @@
 void serial_print (char *msg);
 static inline void serial_send (char c);
 
-//void idle(void)
-//{
-//    while ( TRUE )
-//    {
-//        serial_print("IIIIII\n");
-//    }
-//}
-
 void spo1()
 {
-    int i;
     while ( TRUE )
     {
         serial_print ("111111\n");
@@ -23,7 +14,6 @@ void spo1()
 
 void spo2()
 {
-    int i;
     while ( TRUE )
     {
         serial_print ("222222\n");
@@ -32,12 +22,21 @@ void spo2()
 
 void per1()
 {
-    int i;
-
+    /* simple counter program */
+    unsigned int a = 0;
+    unsigned int b = 0;
+    char *str = "   \n";
     while ( TRUE )
     {
-        serial_print ("AAAAAA\n");
-//      OS_Yield();
+        b = a;
+        str[2] = (b % 10) + '0';
+        b /= 10;
+        str[1] = (b % 10) + '0';
+        b /= 10;
+        str[0] = (b % 10) + '0';
+        serial_print (str);
+        ++a;
+        OS_Yield();
     }
 }
 
@@ -48,8 +47,6 @@ void per2()
         serial_print ("BBBBBB\n");
     }
 }
-
-/* main() can then create processes and initialize the PPP[] and PPPMax[] arrays */
 
 static inline void serial_send (char c)
 {
@@ -79,14 +76,17 @@ int main (int argc, char *argv[])
     _io_ports[M6811_SCCR2] = M6811_TE | M6811_RE;
 
     OS_Init();
+
+    /* main() can then create processes and initialize the PPP[] and PPPMax[] arrays */
+
     OS_Create(spo1, 0, SPORADIC, 1);
     OS_Create(spo2, 0, SPORADIC, 1);
     OS_Create(per1, 0, PERIODIC, 'A');
     OS_Create(per2, 0, PERIODIC, 'B');
 
-    PPP[0]      = IDLE;
+    PPP[0]      = 'A';
     PPP[1]      = IDLE;
-    PPP[2]      = 'A';
+    PPP[2]      = IDLE;
     PPP[3]      = 'B';
     PPPMax[0]   = 2;
     PPPMax[1]   = 5;

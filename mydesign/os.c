@@ -12,7 +12,7 @@
 #include "ports.h"
 #include "fifo.h"
 #include "process.h"
-//#include "semaphores.h"
+#include "semaphores.h"
 
 ProcQueue devProcs;
 ProcQueue spoProcs;
@@ -24,7 +24,7 @@ int PPPLen;
 // plus one workspace for the idle process.
 char acWorkspaces[MAXPROCESS*WORKSPACE]; 
 char idleWorkspace[WORKSPACE];
-//Semaphore semArr[MAXSEM];
+Semaphore semArr[2];
 
 ProcCtrlBlock  arrProcs[MAXPROCESS];
 ProcCtrlBlock  idleProc;
@@ -42,34 +42,34 @@ int  OS_GetParam(void)
     return currProc->argument;
 }
 
-//void OS_InitSem(int s, int n)
-//{
-//    semArr[s].count = n;
-//}
-//
-//void OS_Wait(int s)
-//{
-//    if ( semArr[s].count > 0 )
-//    {
-//        semArr[s].count--;
-//    }
-//    else
-//    {
-//        Enqueue(semArr[s].procQueue, currProc);
-//        /*block ()*/
-//    }
-//}
-//
-//
-//void OS_Signal(int s)
-//{
-//    semArr[s].count++;
-//    if(semArr[s].procQueue->fillCount > 0)
-//    {
-//        Dequeue(semArr[s].procQueue, &currProc);
-//        /*wakeup(P)*/
-//    }
-//}
+void OS_InitSem(int s, int n)
+{
+    semArr[s].count = n;
+}
+
+void OS_Wait(int s)
+{
+    if ( semArr[s].count > 0 )
+    {
+        semArr[s].count--;
+    }
+    else
+    {
+        Enqueue(semArr[s].procQueue, currProc);
+        /*block ()*/
+    }
+}
+
+
+void OS_Signal(int s)
+{
+    semArr[s].count++;
+    if(semArr[s].procQueue->fillCount > 0)
+    {
+        Dequeue(semArr[s].procQueue, &currProc);
+        /*wakeup(P)*/
+    }
+}
 
 /* OS Initialization */
 void OS_Init(void)
@@ -92,6 +92,14 @@ void OS_Init(void)
     SWIV  = context_switch;
     TOC4V = context_switch;
 }
+void idle ( void )
+{
+    /* idle process */
+    while ( TRUE )
+    {
+        serial_print("IIIIII\n");
+    }
+}
 void OS_Start(void)
 {
 
@@ -105,11 +113,7 @@ void OS_Start(void)
 
     _io_ports[TOC4] = _io_ports[TCNT] + 20000;
     
-    while ( TRUE )
-    {
-        serial_print("IIIIII\n");
-    }
-//  idle();
+    idle();
 //  context_switch();
 }
 
@@ -255,11 +259,8 @@ void Schedule(void)
     
     timeInMs = PPPMax[SchedIdx];
     SchedIdx = (SchedIdx + 1) % PPPLen;
-//  timeToPreempt(timeInMs);
 
-    _io_ports[TOC4] = _io_ports[TCNT] + timeInMs * TICKS_IN_MS;
-    /* Set the bomb */
-    B_SET(_io_ports[TMSK1], 4);
+    timeToPreempt(timeInMs);
 }
 
 void timeToPreempt(unsigned int timeInMs)
@@ -283,17 +284,10 @@ void setProcessStack()
 //  sp = (unsigned char *) t;
 
     stackPointer = currProc->sp;
-
-//  stackPointer = ((currProc->pc) & 0x00FF)
-//  (stackPointer - 1) = ((currProc->pc) & 0xFF00) >> 8;
-
     *(unsigned int*)(stackPointer - 1) = (unsigned int) currProc->pc;
-
-//  programCounter = (unsigned char*) stackPointer - 1;
-//  *programCounter = (unsigned int) currProc->pc;
-
     currProc->sp = (unsigned int*) (stackPointer - 9);
 }
+
 __attribute__ ((interrupt)) void context_switch (void)
 {
     B_SET(_io_ports[TFLG1], 4);
