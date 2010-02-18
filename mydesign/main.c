@@ -55,17 +55,33 @@ void per2()
 
 void dev1()
 {
+    int i;
     while ( TRUE )
     {
-        serial_print ("DDDDDD\n");
+        serial_print ("I'm a device process\n");
+        for ( i = 1 ; i != 0; ++i);
+        for ( i = 1 ; i != 0; ++i);
+        for ( i = 1 ; i != 0; ++i);
+        for ( i = 1 ; i != 0; ++i);
+        for ( i = 1 ; i != 0; ++i);
+        for ( i = 1 ; i != 0; ++i);
+        OS_Yield();
     }
 }
 
 void dev2()
 {
+    int i;
     while ( TRUE )
     {
-        serial_print ("dddddd\n");
+        serial_print ("I'm a DEVICE PROCESS 2\n");
+        for ( i = 1 ; i != 0; ++i);
+        for ( i = 1 ; i != 0; ++i);
+        for ( i = 1 ; i != 0; ++i);
+        for ( i = 1 ; i != 0; ++i);
+        for ( i = 1 ; i != 0; ++i);
+        for ( i = 1 ; i != 0; ++i);
+        OS_Yield();
     }
 }
 
@@ -104,17 +120,17 @@ int main (int argc, char *argv[])
     OS_Create(spo2, 0, SPORADIC, 1);
     OS_Create(per1, 0, PERIODIC, 'A');
     OS_Create(per2, 0, PERIODIC, 'B');
-    OS_Create(dev1, 0, DEVICE, 16);
-    OS_Create(dev2, 0, DEVICE, 16);
+    OS_Create(dev1, 0, DEVICE, 6);
+    OS_Create(dev2, 0, DEVICE, 18);
 
     PPP[0]      = 'A';
-    PPP[1]      = IDLE;
+    PPP[1]      = 'B';
     PPP[2]      = IDLE;
-    PPP[3]      = 'B';
-    PPPMax[0]   = 2;
-    PPPMax[1]   = 5;
-    PPPMax[2]   = 5;
-    PPPMax[3]   = 4;
+    PPP[3]      = IDLE;
+    PPPMax[0]   = 3;
+    PPPMax[1]   = 4;
+    PPPMax[2]   = 3;
+    PPPMax[3]   = 5;
     PPPLen      = 4;
 
     OS_Start();
