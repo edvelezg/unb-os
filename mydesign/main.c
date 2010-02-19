@@ -64,31 +64,33 @@ void dev1()
         for ( i = 1 ; i != 0; ++i );
         for ( i = 1 ; i != 0; ++i );
         for ( i = 1 ; i != 0; ++i );
-        OS_Yield();
+        OS_Yield(); /* must yield or terminate, if not it won't be interrupted.*/
     }
+    OS_Terminate();
 }
 
 void dev2()
 {
+    static int j = 0;
     unsigned int *myP;
-	char *str = "      ";
-	unsigned int i;
+    char *str = "      ";
+    unsigned int i;
 
-	myP = (unsigned int *)&_io_ports[TCNT];
-	
-    while ( 1 )
+    myP = (unsigned int *)&_io_ports[TCNT];
+
+    while ( j <= 5 )
     {
-		i = *myP;
-		str[5] = (i % 10) + '0';
-		i /= 10;
-		str[4] = (i % 10) + '0';
-		i /= 10;
-		str[3] = (i % 10) + '0';
-		i /= 10;
-		str[2] = (i % 10) + '0';
-		i /= 10;
-		str[1] = (i % 10) + '0';
-        serial_print ("\nTCNTs value is:\n");
+        i = *myP;
+        str[5] = (i % 10) + '0';
+        i /= 10;
+        str[4] = (i % 10) + '0';
+        i /= 10;
+        str[3] = (i % 10) + '0';
+        i /= 10;
+        str[2] = (i % 10) + '0';
+        i /= 10;
+        str[1] = (i % 10) + '0';
+        serial_print ("TCNTs value is:\n");
         serial_print (str);
         serial_print ("\n");
         for ( i = 1; i != 0 ; ++i );
@@ -96,8 +98,10 @@ void dev2()
         for ( i = 1; i != 0 ; ++i );
         for ( i = 1; i != 0 ; ++i );
         for ( i = 1; i != 0 ; ++i );
-        OS_Yield();
+        ++j;
+        OS_Yield();  /* must yield or terminate, if not it won't be interrupted.*/
     }
+    OS_Terminate();
 }
 
 static inline void serial_send (char c)

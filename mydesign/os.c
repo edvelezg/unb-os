@@ -54,7 +54,7 @@ void idle ( void )
 void OS_Init(void)
 {
     B_SET(_io_ports[TMSK2], 0); // slows clock down for testing
-	B_SET(_io_ports[TMSK2], 1);
+    B_SET(_io_ports[TMSK2], 1);
 
     int i;
 
@@ -244,7 +244,7 @@ BOOL NextDevProc(unsigned int timeInMs)
                 Enqueue(&devProcs, p0);
                 return TRUE;
             }
-            else 
+            else
             {
                 p0->countDown -= timeInMs;
             }
@@ -312,9 +312,7 @@ void timeToPreempt(unsigned int timeInMs)
     _io_ports[TOC4] = _io_ports[TCNT] + timeInMs * TICKS_IN_MS;
     /* Set the bomb */
     B_SET(_io_ports[TMSK1], 4);
-
-//  B_SET(_io_ports[TMSK1], 4);
-//  B_SET(_io_ports[TFLG1], 4);
+    B_SET(_io_ports[TFLG1], 4);
 }
 
 void setProcessStack()
@@ -338,11 +336,8 @@ void setProcessStack()
 __attribute__ ((interrupt)) void context_switch (void)
 {
     OS_DI();
-    B_SET(_io_ports[TFLG1], 4);
+    B_UNSET(_io_ports[TFLG1], 4);
     B_UNSET(_io_ports[TMSK1], 4);
-
-//  B_UNSET(_io_ports[TFLG1], 4);
-//  B_UNSET(_io_ports[TMSK1], 4);
 
     if ( currProc != 0 )
     {
