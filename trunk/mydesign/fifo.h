@@ -2,7 +2,6 @@
 #define _FIFO_H_
 
 #include "os.h"
-#include <stdlib.h>
 
 typedef struct fifo_struct
 {
