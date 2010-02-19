@@ -23,7 +23,7 @@ int PPPLen;
 
 char acWorkspaces[MAXPROCESS*WORKSPACE]; 
 char idleWorkspace[WORKSPACE/4];
-Semaphore semArr[2];
+Semaphore semArr[MAXSEM];
 
 ProcCtrlBlock  arrProcs[MAXPROCESS];
 ProcCtrlBlock  idleProc;
@@ -39,34 +39,6 @@ void OS_Yield(void)
 int  OS_GetParam(void)
 {
     return currProc->argument;
-}
-
-void OS_InitSem(int s, int n)
-{
-    semArr[s].count = n;
-}
-
-void OS_Wait(int s)
-{
-    if ( semArr[s].count > 0 )
-    {
-        semArr[s].count--;
-    }
-    else
-    {
-        Enqueue(semArr[s].procQueue, currProc);
-        /*block ()*/
-    }
-}
-
-void OS_Signal(int s)
-{
-    semArr[s].count++;
-    if ( semArr[s].procQueue->fillCount > 0 )
-    {
-        Dequeue(semArr[s].procQueue, &currProc);
-        /*wakeup(P)*/
-    }
 }
 
 /* idle process */
@@ -105,11 +77,44 @@ void OS_Init(void)
     TOC4V = context_switch;
 }
 
+void OS_InitSem(int s, int n)
+{
+    semArr[s].count = n;
+}
+
+void OS_Wait(int s)
+{
+    OS_DI(); /* disable interrupts to perform as atomic operation */
+    if ( semArr[s].count > 0 )
+    {
+        semArr[s].count--;
+        OS_EI();
+    }
+    else
+    {
+        Enqueue(semArr[s].procQueue, currProc);
+        currProc->state = WAITING;
+        OS_EI();
+        OS_Yield();
+    }
+}
+
+void OS_Signal(int s)
+{
+    OS_DI(); /* disable interrupts to perform as atomic operation */
+    semArr[s].count++;
+    if ( semArr[s].procQueue->fillCount > 0 )
+    {
+        Dequeue(semArr[s].procQueue, &currProc);
+        currProc->state = READY;
+    }
+    OS_EI();
+}
+
+
 void OS_Start(void)
 {
-
     currProc = 0;
-
     context_switch();
 }
 
@@ -219,47 +224,45 @@ void OS_Terminate(void)
     SWI();
 }
 
-void isDevProcDue()
+BOOL NextDevProc(unsigned int timeInMs)
 {
+    unsigned int count = 0;
+    ProcCtrlBlock *p0;
 
-}
-
-void Schedule(void)
-{
-    static unsigned int SchedIdx = 0;
-    ProcCtrlBlock *p0; /* choose next process to run */
-    BOOL found = FALSE; 
-    unsigned int idx = 0;
-    unsigned int timeInMs;
-    /* choose how long to run it for */
-    timeInMs = PPPMax[SchedIdx];
-    //(devProcs.procRefs[1]->timeRemaining)
-    while ( idx < devProcs.fillCount )
+    while ( count < devProcs.fillCount )
     {
         if ( Dequeue(&devProcs, &p0) == TRUE )
         {
             /* device process is due to run */
             if ( p0->countDown <= 0 )
             {
-                found = TRUE;
-                p0->countDown = p0->frequency;
                 currProc = p0;
+                p0->countDown = p0->frequency;
                 Enqueue(&devProcs, p0);
-                break;
+                return TRUE;
             }
             else 
             {
                 p0->countDown -= timeInMs;
-//              if ( p0->timeRemaining < 0 )
-//              {
-//                  timeInMs += p0->timeRemaining;
-//              }
             }
             Enqueue(&devProcs, p0);
-            idx += 1;
+            count += 1;
         }
     }
-    if ( found == FALSE )
+    return FALSE;
+}
+
+void Schedule(void)
+{
+    static unsigned int SchedIdx = 0;
+    ProcCtrlBlock *p0; /* choose next process to run */
+    unsigned int idx = 0;
+    unsigned int timeInMs;
+
+    /* choose how long to run it for */
+    timeInMs = PPPMax[SchedIdx];
+
+    if ( !NextDevProc(timeInMs) )
     {
         if ( PPP[SchedIdx] == IDLE )
         {
@@ -288,7 +291,16 @@ void Schedule(void)
         }    
 
         SchedIdx = (SchedIdx + 1) % PPPLen;
+        if ( !(currProc->state == READY || currProc->state == NEW) )
+        {
+            OS_Yield();
+        }
         timeToPreempt(timeInMs);
+    }
+
+    if ( !(currProc->state == READY || currProc->state == NEW) )
+    {
+        OS_Yield();
     }
 }
 
@@ -319,13 +331,10 @@ void setProcessStack()
 
 __attribute__ ((interrupt)) void context_switch (void)
 {
+    OS_DI();
     B_SET(_io_ports[TFLG1], 4);
     B_UNSET(_io_ports[TMSK1], 4);
 
-    if ( currProc->state == RUNNING )
-    {
-        currProc->state = READY;
-    }
     if ( currProc != 0 )
     {
         asm volatile ("sts %0" : "=m" (currProc->sp) : : "memory" ); 
@@ -338,10 +347,9 @@ __attribute__ ((interrupt)) void context_switch (void)
         setProcessStack();
         currProc->state = READY;
     }
-
+    OS_EI();
     asm volatile ("lds %0" : : "m" (currProc->sp) : "memory");
 
-    currProc->state = RUNNING;
 }
 
 void Enqueue(ProcQueue* prq, ProcCtrlBlock* p)

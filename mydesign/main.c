@@ -6,23 +6,33 @@ static inline void serial_send (char c);
 
 void spo1()
 {
+    while ( TRUE )
+    {
         serial_print ("111111\n");
-        serial_print ("111111\n");
-        serial_print ("111111\n");
-        serial_print ("111111\n");
-        serial_print ("111111\n");
-        serial_print ("111111\n");
-        OS_Terminate();
+    }
+    serial_print ("111111\n");
+    serial_print ("111111\n");
+    serial_print ("111111\n");
+    serial_print ("111111\n");
+    serial_print ("111111\n");
+    OS_Terminate();
 }
 
 void spo2()
 {
-        serial_print ("222222\n");
-        serial_print ("222222\n");
-        serial_print ("222222\n");
-        serial_print ("222222\n");
-        serial_print ("222222\n");
-        OS_Terminate();
+//  while ( TRUE )
+//  {
+//      serial_print ("222222\n");
+//  }
+    serial_print ("222222\n");
+    serial_print ("222222\n");
+    serial_print ("222222\n");
+    serial_print ("222222\n");
+    serial_print ("222222\n");
+    serial_print ("222222\n");
+    serial_print ("222222\n");
+    serial_print ("222222\n");
+    OS_Terminate();
 }
 
 void per1()
@@ -41,7 +51,7 @@ void per1()
         str[0] = (b % 10) + '0';
         serial_print (str);
         ++a;
-        OS_Yield();
+//      OS_Yield();
     }
 }
 
@@ -59,12 +69,12 @@ void dev1()
     while ( TRUE )
     {
         serial_print ("I'm a device process\n");
-        for ( i = 1 ; i != 0; ++i);
-        for ( i = 1 ; i != 0; ++i);
-        for ( i = 1 ; i != 0; ++i);
-        for ( i = 1 ; i != 0; ++i);
-        for ( i = 1 ; i != 0; ++i);
-        for ( i = 1 ; i != 0; ++i);
+        for ( i = 1 ; i != 0; ++i );
+        for ( i = 1 ; i != 0; ++i );
+        for ( i = 1 ; i != 0; ++i );
+        for ( i = 1 ; i != 0; ++i );
+        for ( i = 1 ; i != 0; ++i );
+        for ( i = 1 ; i != 0; ++i );
         OS_Yield();
     }
 }
@@ -75,12 +85,12 @@ void dev2()
     while ( TRUE )
     {
         serial_print ("I'm a DEVICE PROCESS 2\n");
-        for ( i = 1 ; i != 0; ++i);
-        for ( i = 1 ; i != 0; ++i);
-        for ( i = 1 ; i != 0; ++i);
-        for ( i = 1 ; i != 0; ++i);
-        for ( i = 1 ; i != 0; ++i);
-        for ( i = 1 ; i != 0; ++i);
+        for ( i = 1 ; i != 0; ++i );
+        for ( i = 1 ; i != 0; ++i );
+        for ( i = 1 ; i != 0; ++i );
+        for ( i = 1 ; i != 0; ++i );
+        for ( i = 1 ; i != 0; ++i );
+        for ( i = 1 ; i != 0; ++i );
         OS_Yield();
     }
 }
@@ -128,9 +138,9 @@ int main (int argc, char *argv[])
     PPP[2]      = IDLE;
     PPP[3]      = IDLE;
     PPPMax[0]   = 3;
-    PPPMax[1]   = 4;
-    PPPMax[2]   = 3;
-    PPPMax[3]   = 5;
+    PPPMax[1]   = 3;
+    PPPMax[2]   = 6;
+    PPPMax[3]   = 6;
     PPPLen      = 4;
 
     OS_Start();

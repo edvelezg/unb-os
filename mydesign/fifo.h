@@ -18,6 +18,7 @@ static int numFifos = 0; /* keeps track of the number of fifos */
 
 FIFO OS_InitFiFo()
 {
+    OS_DI();
     /* gets next available message queue */
     if ( numFifos < MAXFIFO )
     {
@@ -32,10 +33,12 @@ FIFO OS_InitFiFo()
         /* ran out of message queues */
         return INVALIDFIFO;
     }
+    OS_EI();
 }
 
 void OS_Write(FIFO f, int val)
 {
+    OS_DI();
     int idx = f - 1;
     fifo_struct *curFifo = &arrFifos[idx];
 
@@ -49,10 +52,13 @@ void OS_Write(FIFO f, int val)
 
     /* increment fillcount if not full */
     curFifo->fillCount = (curFifo->fillCount == FIFOSIZE) ? FIFOSIZE : ++curFifo->fillCount;
+
+    OS_EI();
 }
 
 BOOL OS_Read(FIFO f, int *val)
 {
+    OS_DI();
     int idx = f - 1;
     fifo_struct *curFifo = &arrFifos[idx];
 
@@ -69,6 +75,7 @@ BOOL OS_Read(FIFO f, int *val)
         curFifo->fillCount--;
         return TRUE;
     }
+    OS_EI();
 }
 
 #endif /* _FIFO_H_ */
