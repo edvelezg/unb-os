@@ -9,49 +9,25 @@ void spo1()
     while ( TRUE )
     {
         serial_print ("111111\n");
+//      OS_Terminate();
     }
-    serial_print ("111111\n");
-    serial_print ("111111\n");
-    serial_print ("111111\n");
-    serial_print ("111111\n");
-    serial_print ("111111\n");
-    OS_Terminate();
 }
 
 void spo2()
 {
-//  while ( TRUE )
-//  {
-//      serial_print ("222222\n");
-//  }
-    serial_print ("222222\n");
-    serial_print ("222222\n");
-    serial_print ("222222\n");
-    serial_print ("222222\n");
-    serial_print ("222222\n");
-    serial_print ("222222\n");
-    serial_print ("222222\n");
-    serial_print ("222222\n");
-    OS_Terminate();
+    while ( TRUE )
+    {
+        serial_print ("222222\n");
+//      OS_Terminate();
+    }
 }
 
 void per1()
 {
-    /* simple counter program */
-    unsigned int a = 0;
-    unsigned int b = 0;
-    char *str = "   \n";
     while ( TRUE )
     {
-        b = a;
-        str[2] = (b % 10) + '0';
-        b /= 10;
-        str[1] = (b % 10) + '0';
-        b /= 10;
-        str[0] = (b % 10) + '0';
-        serial_print (str);
-        ++a;
-//      OS_Yield();
+        serial_print ("AAAAAA\n");
+//      OS_Terminate();
     }
 }
 
@@ -60,15 +36,28 @@ void per2()
     while ( TRUE )
     {
         serial_print ("BBBBBB\n");
+//      OS_Terminate();
     }
 }
 
 void dev1()
 {
     int i;
+    unsigned int a = 0;
+    unsigned int b = 0;
+    char *str = "   \n";
     while ( TRUE )
     {
         serial_print ("I'm a device process\n");
+        serial_print ("That counts\n");
+        b = a;
+        str[2] = (b % 10) + '0';
+        b /= 10;
+        str[1] = (b % 10) + '0';
+        b /= 10;
+        str[0] = (b % 10) + '0';
+        serial_print (str);
+        ++a;
         for ( i = 1 ; i != 0; ++i );
         for ( i = 1 ; i != 0; ++i );
         for ( i = 1 ; i != 0; ++i );
@@ -81,16 +70,32 @@ void dev1()
 
 void dev2()
 {
-    int i;
-    while ( TRUE )
+    unsigned int *myP;
+	char *str = "      ";
+	unsigned int i;
+
+	myP = (unsigned int *)&_io_ports[TCNT];
+	
+    while ( 1 )
     {
-        serial_print ("I'm a DEVICE PROCESS 2\n");
-        for ( i = 1 ; i != 0; ++i );
-        for ( i = 1 ; i != 0; ++i );
-        for ( i = 1 ; i != 0; ++i );
-        for ( i = 1 ; i != 0; ++i );
-        for ( i = 1 ; i != 0; ++i );
-        for ( i = 1 ; i != 0; ++i );
+		i = *myP;
+		str[5] = (i % 10) + '0';
+		i /= 10;
+		str[4] = (i % 10) + '0';
+		i /= 10;
+		str[3] = (i % 10) + '0';
+		i /= 10;
+		str[2] = (i % 10) + '0';
+		i /= 10;
+		str[1] = (i % 10) + '0';
+        serial_print ("\nTCNTs value is:\n");
+        serial_print (str);
+        serial_print ("\n");
+        for ( i = 1; i != 0 ; ++i );
+        for ( i = 1; i != 0 ; ++i );
+        for ( i = 1; i != 0 ; ++i );
+        for ( i = 1; i != 0 ; ++i );
+        for ( i = 1; i != 0 ; ++i );
         OS_Yield();
     }
 }
@@ -131,16 +136,16 @@ int main (int argc, char *argv[])
     OS_Create(per1, 0, PERIODIC, 'A');
     OS_Create(per2, 0, PERIODIC, 'B');
     OS_Create(dev1, 0, DEVICE, 6);
-    OS_Create(dev2, 0, DEVICE, 18);
+    OS_Create(dev2, 0, DEVICE, 6);
 
     PPP[0]      = 'A';
     PPP[1]      = 'B';
     PPP[2]      = IDLE;
     PPP[3]      = IDLE;
-    PPPMax[0]   = 3;
-    PPPMax[1]   = 3;
-    PPPMax[2]   = 6;
-    PPPMax[3]   = 6;
+    PPPMax[0]   = 4;
+    PPPMax[1]   = 4;
+    PPPMax[2]   = 1;
+    PPPMax[3]   = 2;
     PPPLen      = 4;
 
     OS_Start();
