@@ -45,6 +45,6 @@
 
 #define _io_ports ((volatile unsigned char*)(PORT_BASE))
 
-#define TICKS_IN_MS 2000
+#define TICKS_IN_MS 200
 
 #endif
