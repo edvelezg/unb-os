@@ -13,7 +13,6 @@
 #include "fifo.h"
 #include "lcd.h"
 
-
 typedef enum 
 {
     NEW, RUNNING, WAITING, READY, TERMINATED
@@ -70,7 +69,7 @@ void Schedule(void);
 void context_switch_to_kernel (void);
 void context_switch_to_process (void);
 void timeToPreempt(unsigned int);
-void preemptionHandler (void); 
+//void preemptionHandler (void);
 
 void idle()
 {
@@ -127,7 +126,7 @@ void OS_Init(void)
     InitQueues();
 
     SWIV  = context_switch_to_process;
-//  TOCV4 = context_switch_to_process;
+    TOC4V = context_switch_to_kernel;
 }
 void OS_Start(void)
 {
@@ -136,10 +135,6 @@ void OS_Start(void)
      * state, the idle task executes 
      * */ 
 	
-//  B_SET(_io_ports[TMSK1], 4);
-//
-//  _io_ports[TOC4] = _io_ports[TCNT] + 20000;
-
     while ( 1 )
     {
         Schedule();
@@ -251,6 +246,7 @@ void Schedule(void)
     ProcCtrlBlock *p0; /* choose next process to run */
     BOOL found = FALSE; 
     int idx = 0;
+    unsigned int timeInMs = PPPMax[scheduleIdx];
     /* choose how long to run it for */
 
     /* if device process is due schedule it */
@@ -278,8 +274,7 @@ void Schedule(void)
         }
     }    
 
-    unsigned int timeInMs = PPPMax[scheduleIdx];
-//  timeToPreempt(PPPMax[scheduleIdx]);
+    timeToPreempt(timeInMs);
 
     scheduleIdx = (scheduleIdx + 1) % PPPLen;
     /* context switch to process */
@@ -295,7 +290,8 @@ void context_switch_to_kernel (void)
     /* coudl also do ins ins */
     asm volatile ("sts %0" : "=m" (currProc->sp) : : "memory" ); 
 
-	/* clear OC4I and OC4F  0TMSK1 */
+    B_UNSET(_io_ports[TFLG1], 4);
+    B_UNSET(_io_ports[TMSK1], 4);
 
     currProc->sp += 2;
 
@@ -325,9 +321,8 @@ void context_switch_to_process (void)
     else if ( currProc->state == READY )
     {
         asm volatile ("lds %0" : : "m" (currProc->sp) : "memory");
+        OS_EI();
         asm volatile ("rti");  /* returning where that function was before */
-//      currProc->pc();
-//      OS_Yield();
     }
     else
     {
@@ -438,8 +433,13 @@ BOOL OS_Read(FIFO f, int *val)
 
 void timeToPreempt(unsigned int timeInMs)
 {
-    _io_ports[TOC4] = _io_ports[TCNT] + timeInMs * 2000;
+    _io_ports[TOC4] = _io_ports[TCNT] + 4 * 2000;
     /* Set the bomb */
     B_SET(_io_ports[TMSK1], 4);
+    B_SET(_io_ports[TFLG1], 4);
 }
 
+//void preemptionHandler(void)
+//{
+//    SWI();
+//}

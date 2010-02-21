@@ -14,20 +14,7 @@ void spo1()
     int i;
     while ( 1 )
     {
-        serial_print ("I'm in Spo1()!\n");
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-		OS_Yield();
+        serial_print ("11111111111111\n");
     }
 }
 
@@ -36,21 +23,8 @@ void spo2()
     int i;
     while ( 1 )
     {
-    serial_print ("I'm in Spo2()!\n");
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-	OS_Yield();
-	    }
+        serial_print ("22222222222222\n");
+    }
     
 }
 
@@ -60,34 +34,7 @@ void per1()
 
     while ( 1 )
     {
-        serial_print ("I'm in PerA() Part 1!\n");
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        OS_Yield();
-        serial_print ("I'm in PerA Part 2()!\n");
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-        for ( i = 1; i != 0 ; ++i );
-//  	OS_Yield();
+        serial_print ("AAAAAAAAAAAAAAAAAAAA!\n");
     }
 }
 
@@ -95,20 +42,9 @@ void per2()
 {
     int i;
 	while (1)
-	{serial_print ("I'm in PerB()!\n");
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    for ( i = 1; i != 0 ; ++i );
-    OS_Yield();}
+	{
+            serial_print ("BBBBBBBBBBBBBB\n");
+        }
 }
 
 /* main() can then create processes and initialize the PPP[] and PPPMax[] arrays */
@@ -157,9 +93,9 @@ int main (int argc, char *argv[])
     OS_Create(per2, 0, PERIODIC, 'B');
 
     PPP[0] = IDLE;
-    PPP[1] = 'A';
-    PPP[2] = 'B';
-    PPP[3] = IDLE;
+    PPP[1] = IDLE;
+    PPP[2] = 'A';
+    PPP[3] = 'B';
     PPPMax[0] = 2;
     PPPMax[1] = 3;
     PPPMax[2] = 4;
