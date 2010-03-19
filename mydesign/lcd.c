@@ -1,5 +1,6 @@
 #include "lcd.h"
 #include "os.h"
+#include "ports.h"
 
 void sys_print_lcd(char* text) {
 	unsigned int i = 0;
@@ -87,4 +88,18 @@ void _sys_init_lcd(void) {
 	LCD_EXECUTE(); 
 	
 	if (!I) { OS_EI(); }
+}
+
+BOOL CheckInterruptMask(void) {
+    /* Non-zero if interrupts were previously masked. */ 
+    unsigned char CC; 
+    
+    asm volatile ("tpa \n\t staa %0 " : "=m" (CC) : : "a","memory"); 
+    
+    if (CC & M6811_BIT4) {
+        return TRUE; 
+    }
+    else {
+        return FALSE; 
+    }
 }

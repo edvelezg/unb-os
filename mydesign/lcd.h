@@ -1,5 +1,6 @@
 #ifndef __LCD_H__
 #define __LCD_H__
+#include "os.h"
 
 #define MAX_CHAR_COUNT 16 
 
@@ -10,5 +11,7 @@
 
 void _sys_init_lcd();
 void sys_print_lcd(char* text);
+BOOL CheckInterruptMask(void);
 
 #endif
+

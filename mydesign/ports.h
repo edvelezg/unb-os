@@ -2,7 +2,30 @@
 #define _PORTS_H_  
 
 #define PORT_BASE 0x1000
- 
+
+/* Macros */
+#define SET_BIT(x)  |= x
+#define CLR_BIT(x)  &= ~x
+
+/* Bit Masks */
+#define M6811_BIT7    0x80
+#define M6811_BIT6    0x40   
+#define M6811_BIT5    0x20   
+#define M6811_BIT4    0x10
+#define M6811_BIT3    0x08
+#define M6811_BIT2    0x04   
+#define M6811_BIT1    0x02
+#define M6811_BIT0    0x01
+/* Bit Masks */
+#define BIT7    0x80
+#define BIT6    0x40   
+#define BIT5    0x20   
+#define BIT4    0x10
+#define BIT3    0x08
+#define BIT2    0x04   
+#define BIT1    0x02
+#define BIT0    0x01
+
 #define TMSK1	0x22    /* OC1I:OC2I:OC3I:OC4I:OC5I:IC1I:IC2I:IC3I */
 #define TFLG1	0x23    /* OC1F:OC2F:OC3F:OC4F:OC5F:IC1F:IC2F:IC3F */ 
 #define TMSK2	0x24    /* TOI:RTII:PAOVI:PAII:0:0:PR1:PR0 */
