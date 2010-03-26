@@ -10,7 +10,7 @@ void spo1()
 {
     while ( TRUE )
     {
-		sys_print_lcd("111111\n");
+        sys_print_lcd("111111\n");
 //      OS_Terminate();
     }
 }
@@ -170,33 +170,51 @@ void _Reset () {
     ///* Enable receiver and transmitter.  */
     //_io_ports[M6811_SCCR2] = M6811_TE | M6811_RE;
 
-	_sys_init_lcd();
+    _sys_init_lcd();
 
     //OS_Init();
 
-	  char *ken = "Ken!\0"; 
-	  char *joey = "Joey\0";
-	  unsigned int i;
-	  while (1)
-	  {
-		sys_print_lcd(ken);
-		for(i = 1; i != 0; i++);
-		for(i = 1; i != 0; i++);
-		for(i = 1; i != 0; i++);
-		for(i = 1; i != 0; i++);
-		sys_print_lcd(joey);
-		for(i = 1; i != 0; i++);
-		for(i = 1; i != 0; i++);
-		for(i = 1; i != 0; i++);
-		for(i = 1; i != 0; i++);
-	  }
+    char *ken = "Ken!\0"; 
+    char *joey = "Joey\0";
+    unsigned int i;
+    sys_print_lcd(ken);
+    for ( i = 1; i != 0; i++ );
+    for ( i = 1; i != 0; i++ );
+    for ( i = 1; i != 0; i++ );
+    for ( i = 1; i != 0; i++ );
+    sys_print_lcd(joey);
+    for ( i = 1; i != 0; i++ );
+    for ( i = 1; i != 0; i++ );
+    for ( i = 1; i != 0; i++ );
+    for ( i = 1; i != 0; i++ );
 
-    return;
+    OS_Init();
+
+    /* main() can then create processes and initialize the PPP[] and PPPMax[] arrays */
+
+    OS_Create(spo1, 0, SPORADIC, 1);
+    OS_Create(spo2, 0, SPORADIC, 1);
+    OS_Create(per1, 0, PERIODIC, 'A');
+    OS_Create(per2, 0, PERIODIC, 'B');
+    OS_Create(dev1, 0, DEVICE, 6);
+    OS_Create(dev2, 0, DEVICE, 6);
+
+    PPP[0]      = 'A';
+    PPP[1]      = 'B';
+    PPP[2]      = IDLE;
+    PPP[3]      = IDLE;
+    PPPMax[0]   = 4;
+    PPPMax[1]   = 4;
+    PPPMax[2]   = 1;
+    PPPMax[3]   = 2;
+    PPPLen      = 4;
+
+    OS_Start();
 }
 
 int main (void)
 {
-	RESETV = (unsigned int)&_Reset; 	/* register the reset handler */
-	while(1); 
-	return 0; 
+    RESETV = (unsigned int)&_Reset;     /* register the reset handler */
+    while ( 1 ); 
+    return 0; 
 }
