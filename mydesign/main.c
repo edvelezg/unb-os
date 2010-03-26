@@ -174,15 +174,17 @@ void _Reset () {
 
     //OS_Init();
 
-    char *ken = "Ken!\0"; 
-    char *joey = "Joey\0";
+//  char *ken = "Ken!\0";
+//  char *joey = "Joey\0";
     unsigned int i;
-    sys_print_lcd(ken);
+//  sys_print_lcd(ken);
+    sys_print_lcd("Ken!\0");
     for ( i = 1; i != 0; i++ );
     for ( i = 1; i != 0; i++ );
     for ( i = 1; i != 0; i++ );
     for ( i = 1; i != 0; i++ );
-    sys_print_lcd(joey);
+//  sys_print_lcd(joey);
+    sys_print_lcd("Joey!\0");
     for ( i = 1; i != 0; i++ );
     for ( i = 1; i != 0; i++ );
     for ( i = 1; i != 0; i++ );
