@@ -82,21 +82,29 @@ void OS_Init(void)
 
 void OS_InitSem(int s, int n)
 {
-    semArr[s].count = n;
+    semArr[s].value = n;
 }
 
 void OS_Wait(int s)
 {
     OS_DI(); /* disable interrupts to perform as atomic operation */
-    if ( semArr[s].count > 0 )
+    if ( semArr[s].value > 0 )
     {
-        semArr[s].count--;
+        semArr[s].value--;
         OS_EI();
     }
     else
     {
-        Enqueue(semArr[s].procQueue, currProc);
+        semArr[s].procQueue[semArr[s].procCount++] = currProc;
+
+        if ( currProc->level == SPORADIC )
+        {
+            Dequeue(&spoProcs, &currProc);
+        }
+//      Enqueue(semArr[s].procQueue, currProc);
+
         currProc->state = WAITING;
+
         OS_EI();
         OS_Yield();
     }
@@ -104,16 +112,31 @@ void OS_Wait(int s)
 
 void OS_Signal(int s)
 {
+    int i; /* iterator */
+    ProcCtrlBlock *p0; 
+
     OS_DI(); /* disable interrupts to perform as atomic operation */
-    semArr[s].count++;
-    if ( semArr[s].procQueue->fillCount > 0 )
+
+    semArr[s].value++;
+
+    
+    if ( semArr[s].procCount > 0 )
     {
-        Dequeue(semArr[s].procQueue, &currProc);
+        p0 = semArr[s].procQueue[0];
+        p0->state = READY;
+        Enqueue(&spoProcs, p0);
+        
+		for(i = 1; i < semArr[s].procCount; i++)
+		{
+			semArr[s].procQueue[i - 1] = semArr[s].procQueue[i];
+		}
+
         currProc->state = READY;
+        semArr[s].procCount--;
     }
     OS_EI();
+    OS_Yield();
 }
-
 
 void OS_Start(void)
 {
