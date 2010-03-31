@@ -31,11 +31,12 @@ void per1()
 {
     while ( TRUE )
     {
+		char i;
         //sys_print_lcd("AAAAAA\n");
 		B_SET(_io_ports[M6811_PORTA], 3);
-		OS_Yield();
-		B_SET(_io_ports[M6811_PORTA], 3);
-		OS_Yield();
+		for ( i = 1 ; i != 0; ++i );
+		B_UNSET(_io_ports[M6811_PORTA], 3);
+		for ( i = 1 ; i != 0; ++i );
 //      OS_Terminate();
     }
 }
