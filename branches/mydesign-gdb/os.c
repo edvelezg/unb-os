@@ -88,6 +88,7 @@ void OS_InitSem(int s, int n)
 void OS_Wait(int s)
 {
     OS_DI(); /* disable interrupts to perform as atomic operation */
+
     if ( semArr[s].value > 0 )
     {
         semArr[s].value--;
