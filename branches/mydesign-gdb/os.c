@@ -100,13 +100,13 @@ void OS_Wait(int s)
 
         if ( currProc->level == SPORADIC )
         {
-            Dequeue(&spoProcs, &currProc);
+            currProc->state = WAITING;
+//          Dequeue(&spoProcs, &currProc);
         }
 //      Enqueue(semArr[s].procQueue, currProc);
 
-        currProc->state = WAITING;
 
-        OS_EI();
+//      OS_EI();
         OS_Yield();
     }
 }

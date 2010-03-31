@@ -154,19 +154,6 @@ int main (int argc, char *argv[])
 
     /* [#t] Mutex Wait Primitive Test */
 
-    OS_InitSem(1, 1);
-
-    PPP[0]      = IDLE;
-    PPP[1]      = IDLE;
-    PPPMax[0]   = 1;
-    PPPMax[1]   = 1;
-    PPPLen      = 2;
-    OS_Create(spo1sem, 0, SPORADIC, 1);
-    OS_Create(spo2sem, 0, SPORADIC, 1);
-
-
-    /* [#t] Mutex Signal Primitive Test */
-
 //  OS_InitSem(1, 1);
 //
 //  PPP[0]      = IDLE;
@@ -174,8 +161,21 @@ int main (int argc, char *argv[])
 //  PPPMax[0]   = 1;
 //  PPPMax[1]   = 1;
 //  PPPLen      = 2;
-//  OS_Create(spo1sig, 0, SPORADIC, 1);
-//  OS_Create(spo2sig, 0, SPORADIC, 1);
+//  OS_Create(spo1sem, 0, SPORADIC, 1);
+//  OS_Create(spo2sem, 0, SPORADIC, 1);
+
+
+    /* [#t] Mutex Signal Primitive Test */
+
+    OS_InitSem(1, 1);
+
+    PPP[0]      = IDLE;
+    PPP[1]      = IDLE;
+    PPPMax[0]   = 1;
+    PPPMax[1]   = 1;
+    PPPLen      = 2;
+    OS_Create(spo1sig, 0, SPORADIC, 1);
+    OS_Create(spo2sig, 0, SPORADIC, 1);
 
 
     OS_Start();
