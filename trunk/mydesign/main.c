@@ -1,3 +1,5 @@
+/** Prints correctly to screen now yay **/
+
 #include "ports.h"
 #include "os.h"
 #include "lcd.h"
@@ -29,7 +31,11 @@ void per1()
 {
     while ( TRUE )
     {
-        sys_print_lcd("AAAAAA\n");
+        //sys_print_lcd("AAAAAA\n");
+		B_SET(_io_ports[M6811_PORTA], 3);
+		OS_Yield();
+		B_SET(_io_ports[M6811_PORTA], 3);
+		OS_Yield();
 //      OS_Terminate();
     }
 }
@@ -198,17 +204,17 @@ void _Reset () {
     OS_Create(spo2, 0, SPORADIC, 1);
     OS_Create(per1, 0, PERIODIC, 'A');
     OS_Create(per2, 0, PERIODIC, 'B');
-    OS_Create(dev1, 0, DEVICE, 6);
-    OS_Create(dev2, 0, DEVICE, 6);
+    //OS_Create(dev1, 0, DEVICE, 6);
+    //OS_Create(dev2, 0, DEVICE, 6);
 
     PPP[0]      = 'A';
     PPP[1]      = 'B';
     PPP[2]      = IDLE;
     PPP[3]      = IDLE;
-    PPPMax[0]   = 4;
-    PPPMax[1]   = 4;
+    PPPMax[0]   = 1;
+    PPPMax[1]   = 1;
     PPPMax[2]   = 1;
-    PPPMax[3]   = 2;
+    PPPMax[3]   = 1;
     PPPLen      = 4;
 
     OS_Start();
@@ -217,6 +223,6 @@ void _Reset () {
 int main (void)
 {
     RESETV = (unsigned int)&_Reset;     /* register the reset handler */
-    while ( 1 ); 
+    //while ( 1 ); 
     return 0; 
 }
