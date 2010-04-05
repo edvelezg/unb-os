@@ -133,67 +133,24 @@ int main (int argc, char *argv[])
 
     /* main() can then create processes and initialize the PPP[] and PPPMax[] arrays */
 
-    /* Generic Test */
+    /* Write & Read multiple Values Test */
 
-//  OS_Create(spo1, 0, SPORADIC, 1);
-//  OS_Create(spo2, 0, SPORADIC, 1);
-//  OS_Create(per1, 0, PERIODIC, 'A');
-//  OS_Create(per2, 0, PERIODIC, 'B');
-//  OS_Create(dev1, 0, DEVICE, 6);
-//  OS_Create(dev2, 0, DEVICE, 6);
-//
-//  PPP[0]      = 'A';
-//  PPP[1]      = 'B';
-//  PPP[2]      = IDLE;
-//  PPP[3]      = IDLE;
-//  PPPMax[0]   = 4;
-//  PPPMax[1]   = 4;
-//  PPPMax[2]   = 1;
-//  PPPMax[3]   = 2;
-//  PPPLen      = 4;
+    FIFO f = OS_InitFiFo();
+    // write the value
+    int myValue = 3, value = 0, j;
+    for ( j = 0; j < FIFOSIZE; ++j )
+    {
+        OS_Write(f, j);
+    }
 
-    /* [#t] Mutex Wait Primitive Test */
-
-//  OS_InitSem(1, 1);
-//
-//  PPP[0]      = IDLE;
-//  PPP[1]      = IDLE;
-//  PPPMax[0]   = 1;
-//  PPPMax[1]   = 1;
-//  PPPLen      = 2;
-//  OS_Create(spo1sem, 0, SPORADIC, 1);
-//  OS_Create(spo2sem, 0, SPORADIC, 1);
-
-
-    /* [#t] Mutex Signal Primitive Test */
-
-//  OS_InitSem(1, 1);
-//
-//  PPP[0]      = IDLE;
-//  PPP[1]      = IDLE;
-//  PPPMax[0]   = 1;
-//  PPPMax[1]   = 1;
-//  PPPLen      = 2;
-//  OS_Create(spo1sig, 0, SPORADIC, 1);
-//  OS_Create(spo2sig, 0, SPORADIC, 1);
-
-
-    /* [#t] Semaphores with value 3 Wait Primitive Test */
-//  
-//  OS_InitSem(2, 3);
-//
-//  PPP[0]      = IDLE;
-//  PPP[1]      = IDLE;
-//  PPPMax[0]   = 1;
-//  PPPMax[1]   = 1;
-//  PPPLen      = 2;
-//  OS_Create(spo1semsig, 0, SPORADIC, 1);
-//  OS_Create(spo2semsig, 0, SPORADIC, 1);
-//  OS_Create(spo3semsig, 0, SPORADIC, 1);
-//  OS_Create(spo4semsig, 0, SPORADIC, 1);
-//
-//
-//  OS_Start();
+    for ( j = 0; j < FIFOSIZE; ++j ) {
+        OS_Read(f, &value);
+        if ( j != value )
+        {
+            serial_print("FAILED\n");
+        }
+    }
+    serial_print("PASSED\n");
 
     return 0;
 }
