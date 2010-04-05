@@ -4,102 +4,43 @@
 void serial_print (char *msg);
 static inline void serial_send (char c);
 
-void spo1sem()
-{
-    OS_Wait(2);
-    while ( TRUE )
-    {
-        serial_print ("111111\n");
-    }
-}
-
-void spo2sem()
-{
-    OS_Wait(2);
-    while ( TRUE )
-    {
-        serial_print ("222222\n");
-    }
-}
-
-
-void spo3sem()
-{
-    OS_Wait(2);
-    while ( TRUE )
-    {
-        serial_print ("333333\n");
-    }
-}
-
-void spo4sem()
-{
-    OS_Wait(2);
-    while ( TRUE )
-    {
-        serial_print ("444444\n");
-    }
-}
-
-void spo1semsig()
-{
-    while ( TRUE )
-    {
-        OS_Wait(2);
-        serial_print ("111111\n");
-        OS_Signal(2);
-    }
-}
-
-void spo2semsig()
-{
-    while ( TRUE )
-    {
-        OS_Wait(2);
-        serial_print ("222222\n");
-        OS_Signal(2);
-    }
-}
-
-
-void spo3semsig()
-{
-    while ( TRUE )
-    {
-        OS_Wait(2);
-        serial_print ("333333\n");
-        OS_Signal(2);
-    }
-}
-
-void spo4semsig()
-{
-    while ( TRUE )
-    {
-        OS_Wait(2);
-        serial_print ("444444\n");
-        OS_Signal(2);
-    }
-}
-
 void spo1sig()
 {
-    while ( TRUE )
+    FIFO f = OS_GetParam();
+    int j;
+    int arr[8] = {0, 0, 2, 2, 2, 2, 0, 0};
+    // write the value
+    for ( j = 0; j < FIFOSIZE; ++j )
     {
-        OS_Wait(1);
-        serial_print ("111111\n");
-        OS_Signal(1);
+        OS_Write(f, arr[j]);
     }
+    OS_Terminate();
 }
 
 void spo2sig()
 {
-    while ( TRUE )
+    FIFO f = OS_GetParam();
+    int j, value;
+    for ( j = 0; j < FIFOSIZE; ++j )
     {
-        OS_Wait(1);
-        serial_print ("222222\n");
-        OS_Signal(1);
+        OS_Read(f, &value);
+        switch ( value )
+        {
+        case 0:
+            serial_print("0 ");
+            break;
+        case 1:
+            serial_print("1 ");
+            break;
+        case 2:
+            serial_print("2 ");
+            break;
+        default:
+            break;
+        }
     }
+    serial_print("\n");
+    OS_Terminate();
 }
 
 static inline void serial_send (char c)
@@ -137,20 +78,15 @@ int main (int argc, char *argv[])
 
     FIFO f = OS_InitFiFo();
     // write the value
-    int myValue = 3, value = 0, j;
-    for ( j = 0; j < FIFOSIZE; ++j )
-    {
-        OS_Write(f, j);
-    }
+    PPP[0]      = IDLE;
+    PPP[1]      = IDLE;
+    PPPMax[0]   = 1;
+    PPPMax[1]   = 1;
+    PPPLen      = 2;
+    OS_Create(spo1sig, f, SPORADIC, 1);
+    OS_Create(spo2sig, f, SPORADIC, 1);
 
-    for ( j = 0; j < FIFOSIZE; ++j ) {
-        OS_Read(f, &value);
-        if ( j != value )
-        {
-            serial_print("FAILED\n");
-        }
-    }
-    serial_print("PASSED\n");
+    OS_Start();
 
     return 0;
 }
