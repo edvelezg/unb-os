@@ -9,11 +9,14 @@ void spo1sig()
     FIFO f = OS_GetParam();
     int j;
     int arr[8] = {0, 0, 2, 2, 2, 2, 0, 0};
-    // write the value
-    for ( j = 0; j < FIFOSIZE; ++j )
+    while ( TRUE )
     {
-        OS_Write(f, arr[j]);
+        for ( j = 0; j < FIFOSIZE; ++j )
+        {
+            OS_Write(f, arr[j]);
+        }
     }
+    // write the value
     OS_Terminate();
 }
 
@@ -21,25 +24,28 @@ void spo2sig()
 {
     FIFO f = OS_GetParam();
     int j, value;
-    for ( j = 0; j < FIFOSIZE; ++j )
+    while ( TRUE )
     {
-        OS_Read(f, &value);
-        switch ( value )
+        for ( j = 0; j < FIFOSIZE; ++j )
         {
-        case 0:
-            serial_print("0 ");
-            break;
-        case 1:
-            serial_print("1 ");
-            break;
-        case 2:
-            serial_print("2 ");
-            break;
-        default:
-            break;
+            OS_Read(f, &value);
+            switch ( value )
+            {
+            case 0:
+                serial_print("0 ");
+                break;
+            case 1:
+                serial_print("1 ");
+                break;
+            case 2:
+                serial_print("2 ");
+                break;
+            default:
+                break;
+            }
         }
+        serial_print("\n");
     }
-    serial_print("\n");
     OS_Terminate();
 }
 
