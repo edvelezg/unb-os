@@ -37,7 +37,7 @@ FIFO OS_InitFiFo()
 
 void OS_Write(FIFO f, int val)
 {
-    OS_DI();
+//  OS_DI();
     int idx = f - 1;
     fifo_struct *curFifo = &arrFifos[idx];
 
@@ -52,12 +52,12 @@ void OS_Write(FIFO f, int val)
     /* increment fillcount if not full */
     curFifo->fillCount = (curFifo->fillCount == FIFOSIZE) ? FIFOSIZE : ++curFifo->fillCount;
 
-    OS_EI();
+//  OS_EI();
 }
 
 BOOL OS_Read(FIFO f, int *val)
 {
-    OS_DI();
+//  OS_DI();
     int idx = f - 1;
     fifo_struct *curFifo = &arrFifos[idx];
 
@@ -74,7 +74,7 @@ BOOL OS_Read(FIFO f, int *val)
         curFifo->fillCount--;
         return TRUE;
     }
-    OS_EI();
+//  OS_EI();
 }
 
 #endif /* _FIFO_H_ */
