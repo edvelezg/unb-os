@@ -6,7 +6,7 @@ static inline void serial_send (char c);
 
 void spo1sem()
 {
-    OS_Wait(1);
+    OS_Wait(2);
     while ( TRUE )
     {
         serial_print ("111111\n");
@@ -15,7 +15,7 @@ void spo1sem()
 
 void spo2sem()
 {
-    OS_Wait(1);
+    OS_Wait(2);
     while ( TRUE )
     {
         serial_print ("222222\n");
@@ -25,7 +25,7 @@ void spo2sem()
 
 void spo3sem()
 {
-    OS_Wait(1);
+    OS_Wait(2);
     while ( TRUE )
     {
         serial_print ("333333\n");
@@ -34,7 +34,7 @@ void spo3sem()
 
 void spo4sem()
 {
-    OS_Wait(1);
+    OS_Wait(2);
     while ( TRUE )
     {
         serial_print ("444444\n");
@@ -45,9 +45,9 @@ void spo1semsig()
 {
     while ( TRUE )
     {
-        OS_Wait(1);
+        OS_Wait(2);
         serial_print ("111111\n");
-        OS_Signal(1);
+        OS_Signal(2);
     }
 }
 
@@ -55,9 +55,9 @@ void spo2semsig()
 {
     while ( TRUE )
     {
-        OS_Wait(1);
+        OS_Wait(2);
         serial_print ("222222\n");
-        OS_Signal(1);
+        OS_Signal(2);
     }
 }
 
@@ -66,9 +66,9 @@ void spo3semsig()
 {
     while ( TRUE )
     {
-        OS_Wait(1);
+        OS_Wait(2);
         serial_print ("333333\n");
-        OS_Signal(1);
+        OS_Signal(2);
     }
 }
 
@@ -76,9 +76,9 @@ void spo4semsig()
 {
     while ( TRUE )
     {
-        OS_Wait(1);
+        OS_Wait(2);
         serial_print ("444444\n");
-        OS_Signal(1);
+        OS_Signal(2);
     }
 }
 
@@ -167,18 +167,33 @@ int main (int argc, char *argv[])
 
     /* [#t] Mutex Signal Primitive Test */
 
-    OS_InitSem(1, 1);
+//  OS_InitSem(1, 1);
+//
+//  PPP[0]      = IDLE;
+//  PPP[1]      = IDLE;
+//  PPPMax[0]   = 1;
+//  PPPMax[1]   = 1;
+//  PPPLen      = 2;
+//  OS_Create(spo1sig, 0, SPORADIC, 1);
+//  OS_Create(spo2sig, 0, SPORADIC, 1);
 
-    PPP[0]      = IDLE;
-    PPP[1]      = IDLE;
-    PPPMax[0]   = 1;
-    PPPMax[1]   = 1;
-    PPPLen      = 2;
-    OS_Create(spo1sig, 0, SPORADIC, 1);
-    OS_Create(spo2sig, 0, SPORADIC, 1);
 
-
-    OS_Start();
+    /* [#t] Semaphores with value 3 Wait Primitive Test */
+//  
+//  OS_InitSem(2, 3);
+//
+//  PPP[0]      = IDLE;
+//  PPP[1]      = IDLE;
+//  PPPMax[0]   = 1;
+//  PPPMax[1]   = 1;
+//  PPPLen      = 2;
+//  OS_Create(spo1semsig, 0, SPORADIC, 1);
+//  OS_Create(spo2semsig, 0, SPORADIC, 1);
+//  OS_Create(spo3semsig, 0, SPORADIC, 1);
+//  OS_Create(spo4semsig, 0, SPORADIC, 1);
+//
+//
+//  OS_Start();
 
     return 0;
 }
