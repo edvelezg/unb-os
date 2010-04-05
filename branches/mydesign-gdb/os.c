@@ -125,7 +125,7 @@ void OS_Signal(int s)
     {
         p0 = semArr[s].procQueue[0];
         p0->state = READY;
-        Enqueue(&spoProcs, p0);
+//      Enqueue(&spoProcs, p0);
         
 		for(i = 1; i < semArr[s].procCount; i++)
 		{
@@ -135,7 +135,7 @@ void OS_Signal(int s)
         currProc->state = READY;
         semArr[s].procCount--;
     }
-    OS_EI();
+//  OS_EI();
     OS_Yield();
 }
 
