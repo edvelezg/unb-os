@@ -3,9 +3,9 @@
 
 typedef struct semaphore_struct
 {
-	ProcQueue	procQueue[MAXPROCESS];
-	int 		count;
-
+	ProcCtrlBlock* 		procQueue[MAXPROCESS];  
+	int			        procCount;			
+	int 		        value;				
 } Semaphore;
 
 #endif
