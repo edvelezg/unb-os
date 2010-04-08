@@ -82,74 +82,55 @@ void OS_Init(void)
 
 void OS_InitSem(int s, int n)
 {
-    if ( n <= MAXPROCESS )
-    {
-        semArr[s].value = n;
-    }
+    semArr[s].value = n;
 }
 
 void OS_Wait(int s)
 {
     OS_DI(); /* disable interrupts to perform as atomic operation */
-    ProcCtrlBlock *p0; 
 
-    if ( semArr[s].value > 0 && currProc->sem_hold != s)
+    if ( semArr[s].value > 0 )
     {
         semArr[s].value--;
-        currProc->sem_hold = s;
         OS_EI();
     }
-    else if ( currProc->sem_sleep == s )
+    else
     {
+        semArr[s].procQueue[semArr[s].procCount++] = currProc;
+
+//      if ( currProc->level == SPORADIC )
+//      {
+            currProc->state = WAITING;
+//      }
+
         OS_Yield();
     }
-    else 
-    {
-        if ( currProc->sem_hold != s )
-        {
-            semArr[s].procQueue[semArr[s].procCount++] = currProc;
-    
-            if ( currProc->level == SPORADIC )
-            {
-                currProc->state = WAITING;
-//              Dequeue(&spoProcs, &p0);
-//              Enqueue(semArr[s].procQueue, currProc);
-            }
-    
-    
-            //      OS_EI();
-            OS_Yield();
-        }
-    }
-
 }
 
 void OS_Signal(int s)
 {
-    OS_DI(); /* disable interrupts to perform as atomic operation */
-
     int i; /* iterator */
     ProcCtrlBlock *p0; 
 
+    OS_DI(); /* disable interrupts to perform as atomic operation */
+
     semArr[s].value++;
-    currProc->sem_hold = -1; // Doesn't hold semaphore
 
     if ( semArr[s].procCount > 0 )
     {
         p0 = semArr[s].procQueue[0];
         p0->state = READY;
-        p0->sem_sleep = -1;
-//      Enqueue(&spoProcs, p0);
+        
+                for(i = 1; i < semArr[s].procCount; i++)
+                {
+                        semArr[s].procQueue[i - 1] = semArr[s].procQueue[i];
+                }
 
-        for ( i = 1; i < semArr[s].procCount; i++ )
-        {
-            semArr[s].procQueue[i - 1] = semArr[s].procQueue[i];
-        }
+//      currProc->state = READY;
         semArr[s].procCount--;
     }
-//  OS_EI();
-//  OS_Yield();
 }
+
 
 void OS_Start(void)
 {
