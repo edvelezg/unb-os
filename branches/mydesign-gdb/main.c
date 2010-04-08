@@ -1,6 +1,10 @@
 #include "ports.h"
 #include "os.h"
 
+#define EMPTYCOUNT      15;
+#define FILLCOUNT       14;
+#define MUTEX           13;
+
 void serial_print (char *msg);
 static inline void serial_send (char c);
 
@@ -29,30 +33,11 @@ void spo1sig()
     int arr[8] = {0, 0, 2, 2, 2, 2, 0, 0};
     while ( TRUE )
     {
-        OS_Wait(2);
-        for ( j = 0; j < FIFOSIZE; ++j )
-        {
+        for ( j = 0; j < FIFOSIZE; ++j ) {
+            OS_Wait(15);
             OS_Write(f, arr[j]);
+            OS_Signal(14);
         }
-        OS_Signal(2);
-    }
-    // write the value
-    OS_Terminate();
-}
-
-void spo3sig()
-{
-    FIFO f = (FIFO)OS_GetParam();
-    int j;
-    int arr[8] = {0, 0, 3, 3, 3, 3, 0, 0};
-    while ( TRUE )
-    {
-        OS_Wait(2);
-        for ( j = 0; j < FIFOSIZE; ++j )
-        {
-            OS_Write(f, arr[j]);
-        }
-        OS_Signal(2);
     }
     // write the value
     OS_Terminate();
@@ -66,6 +51,7 @@ void spo2sig()
     {
         if ( OS_Read(f, &value) )
         {
+            OS_Wait(14);
             switch ( value )
             {
             case 0:
@@ -80,12 +66,9 @@ void spo2sig()
             default:
                 break;
             }
+            OS_Signal(15); 
         }
-        else
-        {
-            serial_print("\n");
-            OS_Yield();
-        }
+//      serial_print("\n");
     }
 //  OS_Terminate();
 }
@@ -165,7 +148,8 @@ int main (int argc, char *argv[])
 //  OS_Start();
 
 
-    OS_InitSem(2, 1);
+    OS_InitSem(15, 8);
+    OS_InitSem(14, 0);
     FIFO f = OS_InitFiFo();
     // write the value
     PPP[0]      = IDLE;
@@ -174,7 +158,7 @@ int main (int argc, char *argv[])
     PPPMax[1]   = 1;
     PPPLen      = 2;
     OS_Create(spo1sig, f, SPORADIC, 1);
-    OS_Create(spo2sig, f, DEVICE, 10);
+    OS_Create(spo2sig, f, SPORADIC, 1);
 //  OS_Create(spo3sig, f, SPORADIC, 1);
 
     OS_Start();
