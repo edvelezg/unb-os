@@ -82,7 +82,10 @@ void OS_Init(void)
 
 void OS_InitSem(int s, int n)
 {
-    semArr[s].value = n;
+    if ( n <= MAXPROCESS )
+    {
+        semArr[s].value = n;
+    }
 }
 
 void OS_Wait(int s)
@@ -92,23 +95,32 @@ void OS_Wait(int s)
     if ( semArr[s].value > 0 )
     {
         semArr[s].value--;
+        currProc->sem_hold = s;
         OS_EI();
     }
-    else
+    else if ( currProc->sem_sleep == s )
     {
-        semArr[s].procQueue[semArr[s].procCount++] = currProc;
-
-        if ( currProc->level == SPORADIC )
-        {
-            currProc->state = WAITING;
-//          Dequeue(&spoProcs, &currProc);
-        }
-//      Enqueue(semArr[s].procQueue, currProc);
-
-
-//      OS_EI();
         OS_Yield();
     }
+    else 
+    {
+        if ( currProc->sem_hold != s )
+        {
+            semArr[s].procQueue[semArr[s].procCount++] = currProc;
+    
+            if ( currProc->level == SPORADIC )
+            {
+                currProc->state = WAITING;
+                //          Dequeue(&spoProcs, &currProc);
+            }
+            //      Enqueue(semArr[s].procQueue, currProc);
+    
+    
+            //      OS_EI();
+            OS_Yield();
+        }
+    }
+
 }
 
 void OS_Signal(int s)
@@ -120,23 +132,21 @@ void OS_Signal(int s)
 
     semArr[s].value++;
 
-    
+
     if ( semArr[s].procCount > 0 )
     {
         p0 = semArr[s].procQueue[0];
         p0->state = READY;
 //      Enqueue(&spoProcs, p0);
-        
-		for(i = 1; i < semArr[s].procCount; i++)
-		{
-			semArr[s].procQueue[i - 1] = semArr[s].procQueue[i];
-		}
 
-        currProc->state = READY;
+        for ( i = 1; i < semArr[s].procCount; i++ )
+        {
+            semArr[s].procQueue[i - 1] = semArr[s].procQueue[i];
+        }
         semArr[s].procCount--;
     }
-//  OS_EI();
-    OS_Yield();
+    OS_EI();
+//  OS_Yield();
 }
 
 void OS_Start(void)
@@ -422,4 +432,4 @@ void InitQueues()
     spoProcs.fillCount = 0;  
     spoProcs.next = 0;       
     spoProcs.first = 0;      
-}
+}                                              

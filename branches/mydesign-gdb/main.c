@@ -4,6 +4,24 @@
 void serial_print (char *msg);
 static inline void serial_send (char c);
 
+void spo1sem()
+{
+    while ( TRUE )
+    {
+        OS_Wait(1);
+        serial_print ("111111\n");
+    }
+}
+
+void spo2sem()
+{
+    while ( TRUE )
+    {
+        OS_Wait(1);
+        serial_print ("222222\n");
+    }
+}
+
 void spo1sig()
 {
     FIFO f = OS_GetParam();
@@ -87,15 +105,15 @@ int main (int argc, char *argv[])
     /* Write & Read multiple Values Test */
 
 
-//  OS_InitSem(1, 1);
-//
-//  PPP[0]      = IDLE;
-//  PPP[1]      = IDLE;
-//  PPPMax[0]   = 1;
-//  PPPMax[1]   = 1;
-//  PPPLen      = 2;
-//  OS_Create(spo1sem, 0, SPORADIC, 1);
-//  OS_Create(spo2sem, 0, SPORADIC, 1);
+    OS_InitSem(1, 1);
+
+    PPP[0]      = IDLE;
+    PPP[1]      = IDLE;
+    PPPMax[0]   = 1;
+    PPPMax[1]   = 1;
+    PPPLen      = 2;
+    OS_Create(spo1sem, 0, SPORADIC, 1);
+    OS_Create(spo2sem, 0, SPORADIC, 1);
 
 
     /* [#t] Mutex Signal Primitive Test */
@@ -128,16 +146,17 @@ int main (int argc, char *argv[])
 //  OS_Start();
 
 
-    OS_InitSem(2, 1);
-    FIFO f = OS_InitFiFo();
-    // write the value
-    PPP[0]      = IDLE;
-    PPP[1]      = IDLE;
-    PPPMax[0]   = 1;
-    PPPMax[1]   = 1;
-    PPPLen      = 2;
-    OS_Create(spo1sig, f, SPORADIC, 1);
-    OS_Create(spo2sig, f, SPORADIC, 1);
+//  OS_InitSem(2, 1);
+//  OS_InitSem(3, 1);
+//  FIFO f = OS_InitFiFo();
+//  // write the value
+//  PPP[0]      = IDLE;
+//  PPP[1]      = IDLE;
+//  PPPMax[0]   = 1;
+//  PPPMax[1]   = 1;
+//  PPPLen      = 2;
+//  OS_Create(spo1sig, f, SPORADIC, 1);
+//  OS_Create(spo2sig, f, SPORADIC, 1);
 
     OS_Start();
 

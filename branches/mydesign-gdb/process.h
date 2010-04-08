@@ -10,15 +10,17 @@ States;
 /* process control block */
 typedef struct pcb_struct 
 {
-    PID         pid;
-    int         level;
-    States      state;
-    int         argument; /* argument */
-    int         *sp; /* stack pointer */
-    void        (*pc)(void); // function pointer
-    int         frequency;
-    int         countDown;
-    int         name;
+    PID                       pid;
+    int                       level;
+    States                    state;
+    int                       argument; /* argument */
+    int                       *sp; /* stack pointer */
+    void                      (*pc)(void); // function pointer
+    int                       frequency;
+    int                       countDown;
+    int                       name;
+    int                       sem_hold; // semaphore this holds
+    int                       sem_sleep; // semaphore it is sleeping on
 } ProcCtrlBlock;
 
 /* queue control block */
