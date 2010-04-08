@@ -92,7 +92,7 @@ void OS_Wait(int s)
 {
     OS_DI(); /* disable interrupts to perform as atomic operation */
 
-    if ( semArr[s].value > 0 )
+    if ( semArr[s].value > 0 && currProc->sem_hold != s)
     {
         semArr[s].value--;
         currProc->sem_hold = s;
@@ -111,9 +111,9 @@ void OS_Wait(int s)
             if ( currProc->level == SPORADIC )
             {
                 currProc->state = WAITING;
-                //          Dequeue(&spoProcs, &currProc);
+//              Enqueue(semArr[s].procQueue, currProc);
+//              Dequeue(&spoProcs, &currProc);
             }
-            //      Enqueue(semArr[s].procQueue, currProc);
     
     
             //      OS_EI();
@@ -125,18 +125,19 @@ void OS_Wait(int s)
 
 void OS_Signal(int s)
 {
+    OS_DI(); /* disable interrupts to perform as atomic operation */
+
     int i; /* iterator */
     ProcCtrlBlock *p0; 
 
-    OS_DI(); /* disable interrupts to perform as atomic operation */
-
     semArr[s].value++;
-
+    currProc->sem_hold = -1; // Doesn't hold semaphore
 
     if ( semArr[s].procCount > 0 )
     {
         p0 = semArr[s].procQueue[0];
         p0->state = READY;
+//      p0->sem_sleep = -1;
 //      Enqueue(&spoProcs, p0);
 
         for ( i = 1; i < semArr[s].procCount; i++ )
@@ -145,7 +146,7 @@ void OS_Signal(int s)
         }
         semArr[s].procCount--;
     }
-    OS_EI();
+//  OS_EI();
 //  OS_Yield();
 }
 
