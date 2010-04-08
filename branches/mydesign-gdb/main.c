@@ -30,25 +30,49 @@ void spo1sig()
 {
     FIFO f = (FIFO)OS_GetParam();
     int j;
-    int arr[8] = {0, 0, 2, 2, 2, 2, 0, 0};
+    int arr[8] = {0, 0, 1, 1, 1, 1, 0, 0};
     while ( TRUE )
     {
+        OS_Wait(13);
         for ( j = 0; j < FIFOSIZE; ++j ) {
             OS_Wait(15);
             OS_Write(f, arr[j]);
             OS_Signal(14);
         }
+        OS_Signal(13);
+        OS_Yield();
     }
     // write the value
     OS_Terminate();
 }
 
+void spo3sig()
+{
+    FIFO f = (FIFO)OS_GetParam();              
+    int j;                                     
+    int arr[8] = {0, 0, 2, 2, 2, 2, 0, 0};     
+    while ( TRUE )                             
+    {                                          
+        OS_Wait(13);
+        for ( j = 0; j < FIFOSIZE; ++j ) {     
+            OS_Wait(15);                       
+            OS_Write(f, arr[j]);               
+            OS_Signal(14);                     
+        }                                      
+        OS_Signal(13);
+        OS_Yield();
+    }                                          
+    // write the value                         
+    OS_Terminate();                                    
+}
+
 void spo2sig()
 {
-    FIFO f = OS_GetParam();
+    FIFO f = (FIFO)OS_GetParam();
     int j, value;
     while ( TRUE )
     {
+//      OS_Wait(13);
         if ( OS_Read(f, &value) )
         {
             OS_Wait(14);
@@ -63,12 +87,19 @@ void spo2sig()
             case 2:
                 serial_print("2 ");
                 break;
+            case 3:
+                serial_print("3 ");
+                break;
+            case 4:
+                serial_print("4 ");
+                break;
             default:
                 break;
             }
             OS_Signal(15); 
         }
-//      serial_print("\n");
+//      OS_Signal(13);
+        OS_Yield();
     }
 //  OS_Terminate();
 }
@@ -150,16 +181,19 @@ int main (int argc, char *argv[])
 
     OS_InitSem(15, 8);
     OS_InitSem(14, 0);
+    OS_InitSem(13, 1);
     FIFO f = OS_InitFiFo();
     // write the value
     PPP[0]      = IDLE;
     PPP[1]      = IDLE;
+//  PPP[2]      = IDLE;
     PPPMax[0]   = 1;
     PPPMax[1]   = 1;
+//  PPPMax[2]   = 1;
     PPPLen      = 2;
     OS_Create(spo1sig, f, SPORADIC, 1);
-    OS_Create(spo2sig, f, SPORADIC, 1);
 //  OS_Create(spo3sig, f, SPORADIC, 1);
+    OS_Create(spo2sig, f, DEVICE, 1);
 
     OS_Start();
 
