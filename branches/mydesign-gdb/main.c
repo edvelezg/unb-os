@@ -24,13 +24,31 @@ void spo2sem()
 
 void spo1sig()
 {
-    FIFO f = OS_GetParam();
+    FIFO f = (FIFO)OS_GetParam();
     int j;
     int arr[8] = {0, 0, 2, 2, 2, 2, 0, 0};
     while ( TRUE )
     {
         OS_Wait(2);
-        for (j = 0; j < FIFOSIZE; ++j )
+        for ( j = 0; j < FIFOSIZE; ++j )
+        {
+            OS_Write(f, arr[j]);
+        }
+        OS_Signal(2);
+    }
+    // write the value
+    OS_Terminate();
+}
+
+void spo3sig()
+{
+    FIFO f = (FIFO)OS_GetParam();
+    int j;
+    int arr[8] = {0, 0, 3, 3, 3, 3, 0, 0};
+    while ( TRUE )
+    {
+        OS_Wait(2);
+        for ( j = 0; j < FIFOSIZE; ++j )
         {
             OS_Write(f, arr[j]);
         }
@@ -46,10 +64,8 @@ void spo2sig()
     int j, value;
     while ( TRUE )
     {
-        OS_Wait(2);
-        for ( j = 0; j < FIFOSIZE; ++j )
+        if ( OS_Read(f, &value) )
         {
-            OS_Read(f, &value);
             switch ( value )
             {
             case 0:
@@ -65,10 +81,13 @@ void spo2sig()
                 break;
             }
         }
-        OS_Signal(2);
-        serial_print("\n");
+        else
+        {
+            serial_print("\n");
+            OS_Yield();
+        }
     }
-    OS_Terminate();
+//  OS_Terminate();
 }
 
 static inline void serial_send (char c)
@@ -147,7 +166,6 @@ int main (int argc, char *argv[])
 
 
     OS_InitSem(2, 1);
-    OS_InitSem(3, 1);
     FIFO f = OS_InitFiFo();
     // write the value
     PPP[0]      = IDLE;
@@ -156,7 +174,8 @@ int main (int argc, char *argv[])
     PPPMax[1]   = 1;
     PPPLen      = 2;
     OS_Create(spo1sig, f, SPORADIC, 1);
-    OS_Create(spo2sig, f, SPORADIC, 1);
+    OS_Create(spo2sig, f, DEVICE, 10);
+//  OS_Create(spo3sig, f, SPORADIC, 1);
 
     OS_Start();
 

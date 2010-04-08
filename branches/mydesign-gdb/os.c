@@ -91,6 +91,7 @@ void OS_InitSem(int s, int n)
 void OS_Wait(int s)
 {
     OS_DI(); /* disable interrupts to perform as atomic operation */
+    ProcCtrlBlock *p0; 
 
     if ( semArr[s].value > 0 && currProc->sem_hold != s)
     {
@@ -111,8 +112,8 @@ void OS_Wait(int s)
             if ( currProc->level == SPORADIC )
             {
                 currProc->state = WAITING;
+//              Dequeue(&spoProcs, &p0);
 //              Enqueue(semArr[s].procQueue, currProc);
-//              Dequeue(&spoProcs, &currProc);
             }
     
     
@@ -137,7 +138,7 @@ void OS_Signal(int s)
     {
         p0 = semArr[s].procQueue[0];
         p0->state = READY;
-//      p0->sem_sleep = -1;
+        p0->sem_sleep = -1;
 //      Enqueue(&spoProcs, p0);
 
         for ( i = 1; i < semArr[s].procCount; i++ )
