@@ -82,6 +82,11 @@
 #define M6811_DDRC	0x07	/* Data directions for port C */ 
 #define M6811_PORTD	0x08	
 #define M6811_DDRD	0x09 	/* Data directions for port D */ 
+
+
+#define OPTION 0x39
+#define ADCTL 0x30 /*controls analog/digital */
+#define ADR1  0x31 /*controls analog/digital */
 /* PORT D: 
 	7: PD5/SSbar - Right motor F/R
 	6: PD4/SCK   - Left motor F/R
@@ -118,6 +123,6 @@
 
 #define _io_ports ((volatile unsigned char*)(PORT_BASE))
 
-#define TICKS_IN_MS 20
+#define TICKS_IN_MS (2000/16)
 
 #endif
