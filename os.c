@@ -46,7 +46,7 @@ void idle ( void )
 {
     while ( TRUE )
     {
-        serial_print("IIIIII\n"); /* just for debugging purposes */
+//      serial_print("IIIIII\n"); /* just for debugging purposes */
     }
 }
 
@@ -153,12 +153,20 @@ void OS_Signal(int s)
         p0 = semArr[s].procQueue[0];
         p0->state = READY;
         
-                for(i = 1; i < semArr[s].procCount; i++)
-                {
-                        semArr[s].procQueue[i - 1] = semArr[s].procQueue[i];
-                }
+        if ( p0->level == SPORADIC )
+        {
+            Enqueue(&spoProcs, p0);
+        }
+        else if ( p0->level == DEVICE )
+        {
+            Enqueue(&devProcs, p0);
+        }
+        /* Dequeuing from the semaphore */
+        for(i = 1; i < semArr[s].procCount; i++)
+        {
+            semArr[s].procQueue[i - 1] = semArr[s].procQueue[i];
+        }
 
-//      currProc->state = READY;
         semArr[s].procCount--;
     }
 }

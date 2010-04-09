@@ -14,6 +14,8 @@ void spo1sem()
     {
         OS_Wait(1);
         serial_print ("111111\n");
+        OS_Signal(1);
+        OS_Yield();
     }
 }
 
@@ -23,30 +25,54 @@ void spo2sem()
     {
         OS_Wait(1);
         serial_print ("222222\n");
+        OS_Signal(1);
+        OS_Yield();
     }
 }
 
-void spo1sig()
+void spo3sem()
+{
+    while ( TRUE )
+    {
+        OS_Wait(1);
+        serial_print ("333333\n");
+        OS_Signal(1);
+        OS_Yield();
+    }
+}
+
+void spo4sem()
+{
+    while ( TRUE )
+    {
+        OS_Wait(1);
+        serial_print ("444444\n");
+        OS_Signal(1);
+        OS_Yield();
+    }
+}
+
+void producer1()
 {
     FIFO f = (FIFO)OS_GetParam();
     int j;
     int arr[8] = {0, 0, 1, 1, 1, 1, 0, 0};
     while ( TRUE )
     {
-        OS_Wait(13);
+//      OS_Wait(13);
         for ( j = 0; j < FIFOSIZE; ++j ) {
             OS_Wait(15);
             OS_Write(f, arr[j]);
             OS_Signal(14);
         }
-        OS_Signal(13);
+//      OS_Signal(13);
         OS_Yield();
     }
     // write the value
     OS_Terminate();
 }
 
-void spo3sig()
+void producer2()
 {
     FIFO f = (FIFO)OS_GetParam();              
     int j;                                     
@@ -66,7 +92,7 @@ void spo3sig()
     OS_Terminate();                                    
 }
 
-void spo2sig()
+void consumer()
 {
     FIFO f = (FIFO)OS_GetParam();
     int j, value;
@@ -179,9 +205,9 @@ int main (int argc, char *argv[])
 //  OS_Start();
 
 
-//  OS_InitSem(15, 8);
-//  OS_InitSem(14, 0);
-//  OS_InitSem(13, 1);
+    OS_InitSem(15, 8);
+    OS_InitSem(14, 0);
+    OS_InitSem(13, 1);
     OS_InitSem(1, 1);
     FIFO f = OS_InitFiFo();
     // write the value
@@ -192,9 +218,14 @@ int main (int argc, char *argv[])
     PPPMax[1]   = 1;
 //  PPPMax[2]   = 1;
     PPPLen      = 2;
-    OS_Create(spo1sem, f, SPORADIC, 1);
-//  OS_Create(spo3sig, f, SPORADIC, 1);
-    OS_Create(spo2sem, f, SPORADIC, 1);
+//  OS_Create(spo1sem, f, SPORADIC, 1);
+//  OS_Create(spo2sem, f, SPORADIC, 1);
+//  OS_Create(spo3sem, f, SPORADIC, 1);
+//  OS_Create(spo4sem, f, SPORADIC, 1);
+
+    OS_Create(consumer, f, DEVICE, 2);
+//  OS_Create(producer1, f, SPORADIC, 2);
+    OS_Create(producer2, f, SPORADIC, 2);
 
     OS_Start();
 
