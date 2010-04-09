@@ -46,7 +46,7 @@ void idle ( void )
 {
     while ( TRUE )
     {
-        serial_print("IIIIII\n");
+        serial_print("IIIIII\n"); /* just for debugging purposes */
     }
 }
 
@@ -88,6 +88,8 @@ void OS_InitSem(int s, int n)
 void OS_Wait(int s)
 {
     OS_DI(); /* disable interrupts to perform as atomic operation */
+    ProcCtrlBlock *p0; /* choose next process to run */
+    BOOL found = FALSE;
 
     if ( semArr[s].value > 0 )
     {
@@ -96,12 +98,42 @@ void OS_Wait(int s)
     }
     else
     {
-        semArr[s].procQueue[semArr[s].procCount++] = currProc;
-
-//      if ( currProc->level == SPORADIC )
-//      {
-            currProc->state = WAITING;
-//      }
+        if ( currProc->level == SPORADIC )
+        {
+            while ( found == FALSE  && Dequeue(&spoProcs, &p0) == TRUE )
+            {
+                if ( p0 == currProc )
+                {
+                    /* if found dequeuing removes it */
+                    found = TRUE;
+                    p0->state = WAITING;
+                    semArr[s].procQueue[semArr[s].procCount++] = p0;
+                }
+                else
+                {
+                    /* if not found put it back in the queue */
+                    Enqueue(&spoProcs, p0);
+                }
+            }
+        }
+        else if ( currProc->level == DEVICE )
+        {
+            while ( found == FALSE  && Dequeue(&devProcs, &p0) == TRUE )
+            {
+                if ( p0 == currProc )
+                {
+                    /* if found dequeuing removes it */
+                    found = TRUE;
+                    p0->state = WAITING;
+                    semArr[s].procQueue[semArr[s].procCount++] = p0;
+                }
+                else
+                {
+                    /* if not found put it back in the queue */
+                    Enqueue(&devProcs, p0);
+                }
+            }
+        }
 
         OS_Yield();
     }
@@ -240,7 +272,6 @@ void OS_Terminate(void)
             }
         }
     }
-    /* TODO: handle case when process is periodic*/
     SWI();
 }
 

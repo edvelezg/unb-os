@@ -179,9 +179,10 @@ int main (int argc, char *argv[])
 //  OS_Start();
 
 
-    OS_InitSem(15, 8);
-    OS_InitSem(14, 0);
-    OS_InitSem(13, 1);
+//  OS_InitSem(15, 8);
+//  OS_InitSem(14, 0);
+//  OS_InitSem(13, 1);
+    OS_InitSem(1, 1);
     FIFO f = OS_InitFiFo();
     // write the value
     PPP[0]      = IDLE;
@@ -191,9 +192,9 @@ int main (int argc, char *argv[])
     PPPMax[1]   = 1;
 //  PPPMax[2]   = 1;
     PPPLen      = 2;
-    OS_Create(spo1sig, f, SPORADIC, 1);
+    OS_Create(spo1sem, f, SPORADIC, 1);
 //  OS_Create(spo3sig, f, SPORADIC, 1);
-    OS_Create(spo2sig, f, DEVICE, 1);
+    OS_Create(spo2sem, f, SPORADIC, 1);
 
     OS_Start();
 
