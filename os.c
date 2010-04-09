@@ -116,24 +116,21 @@ void OS_Signal(int s)
 
     semArr[s].value++;
 
-    
     if ( semArr[s].procCount > 0 )
     {
         p0 = semArr[s].procQueue[0];
         p0->state = READY;
-//      Enqueue(&spoProcs, p0);
         
-		for(i = 1; i < semArr[s].procCount; i++)
-		{
-			semArr[s].procQueue[i - 1] = semArr[s].procQueue[i];
-		}
+                for(i = 1; i < semArr[s].procCount; i++)
+                {
+                        semArr[s].procQueue[i - 1] = semArr[s].procQueue[i];
+                }
 
 //      currProc->state = READY;
         semArr[s].procCount--;
     }
-//  OS_EI();
-    OS_Yield();
 }
+
 
 void OS_Start(void)
 {
@@ -418,4 +415,4 @@ void InitQueues()
     spoProcs.fillCount = 0;  
     spoProcs.next = 0;       
     spoProcs.first = 0;      
-}
+}                                              
