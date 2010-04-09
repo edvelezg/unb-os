@@ -1,116 +1,154 @@
-/** Prints correctly to screen now yay **/
-
 #include "ports.h"
 #include "os.h"
-#include "lcd.h"
-#include "interrupts.h"
+
+#define EMPTYCOUNT      15;
+#define FILLCOUNT       14;
+#define MUTEX           13;
 
 void serial_print (char *msg);
 static inline void serial_send (char c);
 
-void spo1()
+void spo1sem()
 {
     while ( TRUE )
     {
-        //sys_print_lcd("111111\n");
+        OS_Wait(1);
+        serial_print ("111111\n");
+        OS_Signal(1);
+        OS_Yield();
     }
 }
 
-void spo2()
+void spo2sem()
 {
-//  OS_Wait(1);
     while ( TRUE )
     {
-        sys_print_lcd("222222\n");
-//      OS_Terminate();
+        OS_Wait(1);
+        serial_print ("222222\n");
+        OS_Signal(1);
+        OS_Yield();
     }
 }
 
-void dev3()
-{
-	char i;
-    while ( TRUE )
-    {
-		_io_ports[M6811_DDRD] = 0xFF; /* it sets the data direction to output for port d for all the pins*/
-		B_SET(_io_ports[M6811_PORTD],4); /* it sets the data direction to output for port d for all the pins*/
-		B_SET(_io_ports[M6811_PORTD],5); /* it sets the data direction to output for port d for all the pins*/
-		//_io_ports[M6811_PORTD] = 0xFF; /* I want 4 and 5 */
-		
-		/* Turns on right and left motors */
-		//B_SET(_io_ports[M6811_PORTA], 5);  // right
-		//B_SET(_io_ports[M6811_PORTA], 6);	// left
-		_io_ports[M6811_PORTA] = 0xFF; /* I want 4 and 5 */
-
-		for ( i = 1 ; i != 0; ++i );
-		for ( i = 1 ; i != 0; ++i );
-		for ( i = 1 ; i != 0; ++i );
-		//for ( i = 1 ; i != 0; ++i );
-		//for ( i = 1 ; i != 0; ++i );
-
-		B_UNSET(_io_ports[M6811_PORTA], 5);
-		B_UNSET(_io_ports[M6811_PORTA], 6);
-		OS_Yield();
-	}
-}
-
-void dev2()
+void spo3sem()
 {
     while ( TRUE )
     {
-		int j;
-		char i;
-        //sys_print_lcd("AAAAAA\n");
-		for (j = 0; j < 255; ++j)
-		{
-			B_SET(_io_ports[M6811_PORTA], 3);
-			for ( i = 1 ; i != 0; ++i );
-			for ( i = 1 ; i != 0; ++i );
-			B_UNSET(_io_ports[M6811_PORTA], 3);
-			for ( i = 1 ; i != 0; ++i );
-			for ( i = 1 ; i != 0; ++i );
-		}
-		OS_Yield();
+        OS_Wait(1);
+        serial_print ("333333\n");
+        OS_Signal(1);
+        OS_Yield();
     }
 }
 
-void dev1()
-{
-	char *a = "--------";
-	int i;
-	int lightValue;
-	while (TRUE)
-	{
-		B_SET(_io_ports[OPTION], 7); // switch port e to analog mode
-		OS_Yield();
-	
-		_io_ports[ADCTL] = 0; // right photocell is pin 0, so you set it to 0.
-
-		while (!(_io_ports[ADCTL] & 128)) // waits bit 7 to light up
-		{	
-		}
-
-		lightValue = _io_ports[ADR1];
-		a[2] = lightValue%10 + '0';
-		lightValue /= 10;
-		a[1] = (lightValue)%10 + '0';
-		lightValue /= 10;
-		a[0] = (lightValue)%10 + '0';
-
-		sys_print_lcd(a);
-		//OS_Yield();
-	}
-
-}
-
-void per2()
+void spo4sem()
 {
     while ( TRUE )
     {
-        sys_print_lcd("BBBBBB\n");
-//      OS_Terminate();
+        OS_Wait(1);
+        serial_print ("444444\n");
+        OS_Signal(1);
+        OS_Yield();
     }
 }
 
+void producer1()
+{
+    FIFO f = (FIFO)OS_GetParam();
+    int j;
+    int arr[8] = {0, 0, 1, 1, 1, 1, 0, 0};
+    while ( TRUE )
+    {
+//      OS_Wait(13);
+        for ( j = 0; j < FIFOSIZE; ++j ) {
+            OS_Wait(15);
+            OS_Write(f, arr[j]);
+            OS_Signal(14);
+        }
+//      OS_Signal(13);
+        OS_Yield();
+    }
+    // write the value
+    OS_Terminate();
+}
+
+void producer2()
+{
+    FIFO f = (FIFO)OS_GetParam();              
+    int j;                                     
+    int arr[8] = {4, 4, 2, 2, 2, 2, 4, 4};     
+    while ( TRUE )                             
+    {                                          
+        OS_Wait(13);
+        for ( j = 0; j < FIFOSIZE; ++j ) {     
+            OS_Wait(15);                       
+            OS_Write(f, arr[j]);               
+            OS_Signal(14);                     
+        }                                      
+        OS_Signal(13);
+        OS_Yield();
+    }                                          
+    // write the value                         
+    OS_Terminate();                                    
+}
+
+void consumer()
+{
+    FIFO f = (FIFO)OS_GetParam();
+    int j, value;
+	char i;    
+    while ( TRUE )
+    {
+//      OS_Wait(13);
+        if ( OS_Read(f, &value) )
+        {
+            OS_Wait(14);
+            switch ( value )
+            {
+				case 0:
+					for (j = 0; j < 200; ++j)
+					{
+						B_SET(_io_ports[M6811_PORTA], 3);
+						for ( i = 1 ; i != 0; ++i );
+						B_UNSET(_io_ports[M6811_PORTA], 3);
+						for ( i = 1 ; i != 0; ++i );
+						break;
+					}
+				case 1:
+					for (j = 0; j < 200; ++j)
+					{
+						B_SET(_io_ports[M6811_PORTA], 3);
+						for ( i = 1 ; i != 0; ++i );
+						B_UNSET(_io_ports[M6811_PORTA], 3);
+						for ( i = 1 ; i != 0; ++i );
+						break;
+					}
+				case 2:
+					for (j = 0; j < 200; ++j)
+					{
+						B_SET(_io_ports[M6811_PORTA], 3);
+						for ( i = 1 ; i != 0; ++i );
+						B_UNSET(_io_ports[M6811_PORTA], 3);
+						for ( i = 1 ; i != 0; ++i );
+						break;
+					}
+				case 3:
+					sys_print_lcd("3 ");						
+					break;
+				case 4:
+					sys_print_lcd("4 ");
+					break;
+				default:
+					break;
+				
+            }
+            OS_Signal(15); 
+        }
+//      OS_Signal(13);
+        OS_Yield();
+    }
+//  OS_Terminate();
+}
 
 static inline void serial_send (char c)
 {
@@ -128,75 +166,88 @@ void serial_print (char *msg)
         serial_send (*msg++);
 }
 
-void spo1sem()
+int main (int argc, char *argv[])
 {
-    OS_Wait(2);
-    while ( TRUE )
-    {
-        serial_print ("111111\n");
-    }
-}
+    /* Configure the SCI to send at M6811_DEF_BAUD baud.  */
+    _io_ports[M6811_BAUD] = M6811_DEF_BAUD;
 
-void spo2sem()
-{
-    OS_Wait(2);
-    while ( TRUE )
-    {
-        serial_print ("222222\n");
-    }
-}
+    /* Setup character format 1 start, 8-bits, 1 stop.  */
+    _io_ports[M6811_SCCR1] = 0;
 
-
-void spo3sem()
-{
-    OS_Wait(2);
-    while ( TRUE )
-    {
-        serial_print ("333333\n");
-    }
-}
-
-void spo4sem()
-{
-    OS_Wait(2);
-    while ( TRUE )
-    {
-        serial_print ("444444\n");
-    }
-}
-
-void _Reset () {
-
-    _sys_init_lcd();
-
-    unsigned int i;
-
-    sys_print_lcd("AndOS!\0");
-    for ( i = 1; i != 0; i++ );
+    /* Enable receiver and transmitter.  */
+    _io_ports[M6811_SCCR2] = M6811_TE | M6811_RE;
 
     OS_Init();
 
     /* main() can then create processes and initialize the PPP[] and PPPMax[] arrays */
 
-    OS_Create(spo1, 0, SPORADIC, 1);
-    //OS_Create(dev1, 0, DEVICE, 10);
-    OS_Create(dev2, 0, DEVICE, 30);
-    OS_Create(dev3, 0, DEVICE, 20);
-    //OS_Create(dev1, 0, DEVICE, 6);
-    //OS_Create(dev2, 0, DEVICE, 6);
+    /* Write & Read multiple Values Test */
 
+
+//  OS_InitSem(1, 1);
+//
+//  PPP[0]      = IDLE;
+//  PPP[1]      = IDLE;
+//  PPPMax[0]   = 1;
+//  PPPMax[1]   = 1;
+//  PPPLen      = 2;
+//  OS_Create(spo1sem, 0, SPORADIC, 1);
+//  OS_Create(spo2sem, 0, SPORADIC, 1);
+
+
+    /* [#t] Mutex Signal Primitive Test */
+
+//
+//  PPP[0]      = IDLE;
+//  PPP[1]      = IDLE;
+//  PPPMax[0]   = 1;
+//  PPPMax[1]   = 1;
+//  PPPLen      = 2;
+//  OS_Create(spo1sig, 0, SPORADIC, 1);
+//  OS_Create(spo2sig, 0, SPORADIC, 1);
+
+
+    /* [#t] Semaphores with value 3 Wait Primitive Test */
+//  
+//  OS_InitSem(2, 3);
+//
+//  PPP[0]      = IDLE;
+//  PPP[1]      = IDLE;
+//  PPPMax[0]   = 1;
+//  PPPMax[1]   = 1;
+//  PPPLen      = 2;
+//  OS_Create(spo1semsig, 0, SPORADIC, 1);
+//  OS_Create(spo2semsig, 0, SPORADIC, 1);
+//  OS_Create(spo3semsig, 0, SPORADIC, 1);
+//  OS_Create(spo4semsig, 0, SPORADIC, 1);
+//
+//
+//  OS_Start();
+
+
+    OS_InitSem(15, 8);
+    OS_InitSem(14, 0);
+    OS_InitSem(13, 1);
+    OS_InitSem(1, 1);
+    FIFO f = OS_InitFiFo();
+    // write the value
     PPP[0]      = IDLE;
-	PPP[1]      = IDLE;
+    PPP[1]      = IDLE;
+//  PPP[2]      = IDLE;
     PPPMax[0]   = 1;
     PPPMax[1]   = 1;
+//  PPPMax[2]   = 1;
     PPPLen      = 2;
+//  OS_Create(spo1sem, f, SPORADIC, 1);
+//  OS_Create(spo2sem, f, SPORADIC, 1);
+//  OS_Create(spo3sem, f, SPORADIC, 1);
+//  OS_Create(spo4sem, f, SPORADIC, 1);
+
+    OS_Create(consumer, f, DEVICE, 2);
+//  OS_Create(producer1, f, SPORADIC, 2);
+    OS_Create(producer2, f, SPORADIC, 2);
 
     OS_Start();
-}
 
-int main (void)
-{
-    RESETV = (unsigned int)&_Reset;     /* register the reset handler */
-    //while ( 1 ); 
-    return 0; 
+    return 0;
 }
