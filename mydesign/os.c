@@ -98,10 +98,10 @@ void OS_Wait(int s)
     {
         semArr[s].procQueue[semArr[s].procCount++] = currProc;
 
-        if ( currProc->level == SPORADIC )
-        {
+//      if ( currProc->level == SPORADIC )
+//      {
             currProc->state = WAITING;
-        }
+//      }
 
         OS_Yield();
     }
@@ -128,7 +128,7 @@ void OS_Signal(int s)
 			semArr[s].procQueue[i - 1] = semArr[s].procQueue[i];
 		}
 
-        currProc->state = READY;
+//      currProc->state = READY;
         semArr[s].procCount--;
     }
 //  OS_EI();
