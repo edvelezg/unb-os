@@ -43,11 +43,11 @@ void OS_Write(FIFO f, int val)
 
     /* the buffer still has space to write
        if it is full writes are ignored */
-    if ( curFifo->fillCount < FIFOSIZE )
-    {
+//  if ( curFifo->fillCount < FIFOSIZE )
+//  {
         curFifo->buffer[curFifo->next] = val;
         curFifo->next = (curFifo->next + 1) % FIFOSIZE;
-    }
+//  }
 
     /* increment fillcount if not full */
     curFifo->fillCount = (curFifo->fillCount == FIFOSIZE) ? FIFOSIZE : ++curFifo->fillCount;
