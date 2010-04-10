@@ -46,7 +46,7 @@ void idle ( void )
 {
     while ( TRUE )
     {
-        serial_print("IIIIII\n");
+//      serial_print("IIIIII\n"); /* just for debugging purposes */
     }
 }
 
@@ -88,6 +88,8 @@ void OS_InitSem(int s, int n)
 void OS_Wait(int s)
 {
     OS_DI(); /* disable interrupts to perform as atomic operation */
+    ProcCtrlBlock *p0; /* choose next process to run */
+    BOOL found = FALSE;
 
     if ( semArr[s].value > 0 )
     {
@@ -96,15 +98,46 @@ void OS_Wait(int s)
     }
     else
     {
-        semArr[s].procQueue[semArr[s].procCount++] = currProc;
-
-//      if ( currProc->level == SPORADIC )
-//      {
-            currProc->state = WAITING;
-//      }
+        if ( currProc->level == SPORADIC )
+        {
+            while ( found == FALSE  && Dequeue(&spoProcs, &p0) == TRUE )
+            {
+                if ( p0 == currProc )
+                {
+                    /* if found dequeuing removes it */
+                    found = TRUE;
+                    p0->state = WAITING;
+                    semArr[s].procQueue[semArr[s].procCount++] = p0;
+                }
+                else
+                {
+                    /* if not found put it back in the queue */
+                    Enqueue(&spoProcs, p0);
+                }
+            }
+        }
+        else if ( currProc->level == DEVICE )
+        {
+            while ( found == FALSE  && Dequeue(&devProcs, &p0) == TRUE )
+            {
+                if ( p0 == currProc )
+                {
+                    /* if found dequeuing removes it */
+                    found = TRUE;
+                    p0->state = WAITING;
+                    semArr[s].procQueue[semArr[s].procCount++] = p0;
+                }
+                else
+                {
+                    /* if not found put it back in the queue */
+                    Enqueue(&devProcs, p0);
+                }
+            }
+        }
 
         OS_Yield();
     }
+//  OS_EI();
 }
 
 void OS_Signal(int s)
@@ -116,23 +149,28 @@ void OS_Signal(int s)
 
     semArr[s].value++;
 
-    
     if ( semArr[s].procCount > 0 )
     {
         p0 = semArr[s].procQueue[0];
         p0->state = READY;
-//      Enqueue(&spoProcs, p0);
         
-		for(i = 1; i < semArr[s].procCount; i++)
-		{
-			semArr[s].procQueue[i - 1] = semArr[s].procQueue[i];
-		}
+        if ( p0->level == SPORADIC )
+        {
+            Enqueue(&spoProcs, p0);
+        }
+        else if ( p0->level == DEVICE )
+        {
+            Enqueue(&devProcs, p0);
+        }
+        /* Dequeuing from the semaphore */
+        for(i = 1; i < semArr[s].procCount; i++)
+        {
+            semArr[s].procQueue[i - 1] = semArr[s].procQueue[i];
+        }
 
-//      currProc->state = READY;
         semArr[s].procCount--;
     }
-//  OS_EI();
-    OS_Yield();
+	OS_EI();
 }
 
 void OS_Start(void)
@@ -329,7 +367,7 @@ void Schedule(void)
 
 void timeToPreempt(unsigned int timeInMs)
 {
-    _io_ports[TOC4] = _io_ports[TCNT] + timeInMs * TICKS_IN_MS;
+    (unsigned int)(_io_ports[TOC4]) = ((unsigned int)(_io_ports[TCNT])) + (timeInMs * TICKS_IN_MS);
     /* Set the bomb */
     B_SET(_io_ports[TMSK1], 4);
     B_SET(_io_ports[TFLG1], 4);

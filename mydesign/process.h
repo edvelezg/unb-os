@@ -19,6 +19,8 @@ typedef struct pcb_struct
     int         frequency;
     int         countDown;
     int         name;
+    int                       sem_hold; // semaphore this holds
+    int                       sem_sleep; // semaphore it is sleeping on
 } ProcCtrlBlock;
 
 /* queue control block */

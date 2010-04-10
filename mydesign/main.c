@@ -8,23 +8,69 @@
 void serial_print (char *msg);
 static inline void serial_send (char c);
 
-void spo1()
+void spo1sem()
 {
     while ( TRUE )
     {
-        sys_print_lcd("111111\n");
-//      OS_Terminate();
+        OS_Wait(1);
+        sys_print_lcd("111111\0");
+        OS_Signal(1);
+        OS_Yield();
     }
 }
 
-void spo2()
+void spo2sem()
 {
-//  OS_Wait(1);
     while ( TRUE )
     {
-        sys_print_lcd("222222\n");
-//      OS_Terminate();
+        OS_Wait(1);
+        sys_print_lcd("222222\0");
+        OS_Signal(1);
+        OS_Yield();
     }
+}
+
+
+void spo3sem()
+{
+    while ( TRUE )
+    {
+        OS_Wait(1);
+        sys_print_lcd("333333\0");
+        OS_Signal(1);
+        OS_Yield();
+    }
+}
+
+void spo4sem()
+{
+    while ( TRUE )
+    {
+        OS_Wait(1);
+        sys_print_lcd("444444\0");
+        OS_Signal(1);
+        OS_Yield();
+    }
+}
+
+void producer1()
+{
+    FIFO f = (FIFO)OS_GetParam();
+    int j;
+    int arr[8] = {0, 0, 1, 1, 1, 1, 0, 4};
+    while ( TRUE )
+    {
+//      OS_Wait(13);
+        for ( j = 0; j < FIFOSIZE; ++j ) {
+            OS_Wait(15);
+            OS_Write(f, arr[j]);
+//          OS_Signal(14);
+        }
+//      OS_Signal(13);
+        OS_Yield();
+    }
+    // write the value
+    OS_Terminate();
 }
 
 void per1()
@@ -114,6 +160,64 @@ void dev2()
     OS_Terminate();
 }
 
+void producer2()
+{
+    FIFO f = (FIFO)OS_GetParam();              
+    int j;                                     
+    int arr[8] = {0, 0, 2, 2, 2, 2, 0, 4};     
+    while ( TRUE )                             
+    {                                          
+//      OS_Wait(13);
+        for ( j = 0; j < FIFOSIZE; ++j ) {     
+            OS_Wait(15);
+            OS_Write(f, arr[j]);               
+            OS_Signal(14);
+        }                                      
+//      OS_Signal(13);
+        OS_Yield();
+    }                                          
+    // write the value                         
+    OS_Terminate();                                    
+}
+
+void consumer()
+{
+    FIFO f = (FIFO)OS_GetParam();
+    int j, value;
+    while ( TRUE )
+    {
+//      OS_Wait(13);
+        if ( OS_Read(f, &value) )
+        {
+//          OS_Wait(14);
+            switch ( value )
+            {
+            case 0:
+                serial_print("0 ");
+                break;
+            case 1:
+                serial_print("1 ");
+                break;
+            case 2:
+                serial_print("2 ");
+                break;
+            case 3:
+                serial_print("3 ");
+                break;
+            case 4:
+                serial_print("\n ");
+                break;
+            default:
+                break;
+            }
+            OS_Signal(15); 
+        }
+//      OS_Signal(13);
+        OS_Yield();
+    }
+//  OS_Terminate();
+}
+
 static inline void serial_send (char c)
 {
     /* Wait until the SIO has finished to send the character.  */
@@ -130,93 +234,40 @@ void serial_print (char *msg)
         serial_send (*msg++);
 }
 
-void spo1sem()
-{
-    OS_Wait(2);
-    while ( TRUE )
-    {
-        serial_print ("111111\n");
-    }
-}
-
-void spo2sem()
-{
-    OS_Wait(2);
-    while ( TRUE )
-    {
-        serial_print ("222222\n");
-    }
-}
-
-
-void spo3sem()
-{
-    OS_Wait(2);
-    while ( TRUE )
-    {
-        serial_print ("333333\n");
-    }
-}
-
-void spo4sem()
-{
-    OS_Wait(2);
-    while ( TRUE )
-    {
-        serial_print ("444444\n");
-    }
-}
-
 void _Reset () {
-    ///* Configure the SCI to send at M6811_DEF_BAUD baud.  */
-    //_io_ports[M6811_BAUD] = M6811_DEF_BAUD;
-
-    ///* Setup character format 1 start, 8-bits, 1 stop.  */
-    //_io_ports[M6811_SCCR1] = 0;
-
-    ///* Enable receiver and transmitter.  */
-    //_io_ports[M6811_SCCR2] = M6811_TE | M6811_RE;
 
     _sys_init_lcd();
 
-    //OS_Init();
-
-//  char *ken = "Ken!\0";
-//  char *joey = "Joey\0";
     unsigned int i;
-//  sys_print_lcd(ken);
-    sys_print_lcd("Ken!\0");
-    for ( i = 1; i != 0; i++ );
-    for ( i = 1; i != 0; i++ );
-    for ( i = 1; i != 0; i++ );
-    for ( i = 1; i != 0; i++ );
-//  sys_print_lcd(joey);
-    sys_print_lcd("Joey!\0");
-    for ( i = 1; i != 0; i++ );
-    for ( i = 1; i != 0; i++ );
-    for ( i = 1; i != 0; i++ );
+
+    sys_print_lcd("SemOSXtreme!\0");
     for ( i = 1; i != 0; i++ );
 
     OS_Init();
 
     /* main() can then create processes and initialize the PPP[] and PPPMax[] arrays */
 
-    OS_Create(spo1, 0, SPORADIC, 1);
-    OS_Create(spo2, 0, SPORADIC, 1);
-    OS_Create(per1, 0, PERIODIC, 'A');
-    OS_Create(per2, 0, PERIODIC, 'B');
-    //OS_Create(dev1, 0, DEVICE, 6);
-    //OS_Create(dev2, 0, DEVICE, 6);
-
-    PPP[0]      = 'A';
-    PPP[1]      = 'B';
-    PPP[2]      = IDLE;
-    PPP[3]      = IDLE;
+    OS_InitSem(15, 8);
+    OS_InitSem(14, 0);
+    OS_InitSem(13, 1);
+    OS_InitSem(1, 1);
+    FIFO f = OS_InitFiFo();
+    // write the value
+    PPP[0]      = IDLE;
+    PPP[1]      = IDLE;
+//  PPP[2]      = IDLE;
     PPPMax[0]   = 1;
     PPPMax[1]   = 1;
-    PPPMax[2]   = 1;
-    PPPMax[3]   = 1;
-    PPPLen      = 4;
+//  PPPMax[2]   = 1;
+    PPPLen      = 2;
+    OS_Create(spo1sem, f, SPORADIC, 1);
+    OS_Create(spo2sem, f, SPORADIC, 1);
+    OS_Create(spo3sem, f, SPORADIC, 1);
+    OS_Create(spo4sem, f, SPORADIC, 1);
+
+    OS_Create(consumer, f, DEVICE, 5);
+    OS_Create(producer1, f, SPORADIC, 5);
+//  OS_Create(producer2, f, SPORADIC, 5);
 
     OS_Start();
 }
