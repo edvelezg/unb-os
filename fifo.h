@@ -25,14 +25,15 @@ FIFO OS_InitFiFo()
         arrFifos[numFifos].next = 0;
         arrFifos[numFifos].first = 0;
         ++numFifos;
+		OS_EI();
         return numFifos;
     }
     else
     {
         /* ran out of message queues */
+		OS_EI();
         return INVALIDFIFO;
     }
-    OS_EI();
 }
 
 void OS_Write(FIFO f, int val)
@@ -51,7 +52,6 @@ void OS_Write(FIFO f, int val)
 
     /* increment fillcount if not full */
     curFifo->fillCount = (curFifo->fillCount == FIFOSIZE) ? FIFOSIZE : ++curFifo->fillCount;
-
 	OS_EI();
 }
 
@@ -76,7 +76,6 @@ BOOL OS_Read(FIFO f, int *val)
 		OS_EI();
         return TRUE;
     }
-//  OS_EI();
 }
 
 #endif /* _FIFO_H_ */

@@ -367,7 +367,7 @@ void Schedule(void)
 
 void timeToPreempt(unsigned int timeInMs)
 {
-    _io_ports[TOC4] = _io_ports[TCNT] + timeInMs * TICKS_IN_MS;
+    (unsigned int)(_io_ports[TOC4]) = ((unsigned int)(_io_ports[TCNT])) + (timeInMs * TICKS_IN_MS);
     /* Set the bomb */
     B_SET(_io_ports[TMSK1], 4);
     B_SET(_io_ports[TFLG1], 4);
