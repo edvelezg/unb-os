@@ -13,14 +13,14 @@ void beep(int value)
 {
 	int j;
 	char i, k;
-	for (j = 0; j < 255; ++j)
+	for (j = 0; j < 128; ++j)
 	{
 		B_SET(_io_ports[M6811_PORTA], 3);
 		for (k = 0; k < value; ++k)
-			for ( i = 1 ; i != 0; ++i );
+			for ( i = 1 ; i != 128; ++i );
 		B_UNSET(_io_ports[M6811_PORTA], 3);
 		for (k = 0; k < value; ++k)
-			for ( i = 1 ; i != 0; ++i );
+			for ( i = 1 ; i != 128; ++i );
 	}
 }
 
@@ -62,10 +62,10 @@ void spo4sem()
 {
     while ( TRUE )
     {
-        OS_Wait(1);
+        //OS_Wait(1);
         sys_print_lcd("444444\0");
-        OS_Signal(1);
-        OS_Yield();
+        //OS_Signal(1);
+        //OS_Yield();
     }
 }
 
@@ -73,7 +73,7 @@ void producer1()
 {
     FIFO f = (FIFO)OS_GetParam();
     int j;
-    int arr[8] = {0, 1, 2, 3, 0, 1, 2, 3};
+    int arr[8] = {0, 1, 2, 3, 3, 2, 1, 0};
     while ( TRUE )
     {
 //      OS_Wait(13);
@@ -166,7 +166,7 @@ void consumer()
         if ( OS_Read(f, &value) )
         {
 //          OS_Wait(14);
-			beep(value);
+			beep(value + 1);
             switch ( value )
             {
             case 0:
@@ -242,9 +242,9 @@ void dev2()
     }
 }
 
-void dev1()
+void senseLight()
 {
-	char *a = "--------";
+	char *a = "-------\0";
 	int i;
 	int lightValue;
 	while (TRUE)
@@ -256,6 +256,7 @@ void dev1()
 
 		while (!(_io_ports[ADCTL] & 128)) // waits bit 7 to light up
 		{	
+			OS_Yield();
 		}
 
 		lightValue = _io_ports[ADR1];
@@ -293,7 +294,7 @@ void _Reset () {
 
     unsigned int i;
 
-    sys_print_lcd("SemOSXTreme3!\0");
+    sys_print_lcd("SemOSXTreme4!\0");
     for ( i = 1; i != 0; i++ );
 
     OS_Init();
@@ -308,17 +309,18 @@ void _Reset () {
     // write the value
     PPP[0]      = IDLE;
     PPP[1]      = IDLE;
-//  PPP[2]      = IDLE;
+	PPP[2]      = 'A';
     PPPMax[0]   = 1;
     PPPMax[1]   = 1;
-//  PPPMax[2]   = 1;
-    PPPLen      = 2;
+	PPPMax[2]   = 1;
+    PPPLen      = 3;
     //OS_Create(spo1sem, f, SPORADIC, 1);
     //OS_Create(spo2sem, f, SPORADIC, 1);
     //OS_Create(spo3sem, f, SPORADIC, 1);
-    //OS_Create(spo4sem, f, SPORADIC, 1);
+    OS_Create(per2, f, PERIODIC, 'A');
 
     OS_Create(consumer, f, DEVICE, 2);
+    OS_Create(senseLight, f, DEVICE, 2);
     OS_Create(producer1, f, SPORADIC, 5);
 //  OS_Create(producer2, f, SPORADIC, 5);
 
