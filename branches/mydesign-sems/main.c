@@ -219,10 +219,10 @@ int main (int argc, char *argv[])
     PPPMax[1]   = 1;
 //  PPPMax[2]   = 1;
     PPPLen      = 2;
-//  OS_Create(spo1sem, f, SPORADIC, 1);
-//  OS_Create(spo2sem, f, SPORADIC, 1);
-//  OS_Create(spo3sem, f, SPORADIC, 1);
-//  OS_Create(spo4sem, f, SPORADIC, 1);
+    OS_Create(spo1sem, f, SPORADIC, 1);
+    OS_Create(spo2sem, f, SPORADIC, 1);
+    OS_Create(spo3sem, f, SPORADIC, 1);
+    OS_Create(spo4sem, f, SPORADIC, 1);
 
     OS_Create(consumer, f, DEVICE, 5);
     OS_Create(producer1, f, SPORADIC, 5);
