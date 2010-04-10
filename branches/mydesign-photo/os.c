@@ -137,6 +137,7 @@ void OS_Wait(int s)
 
         OS_Yield();
     }
+	OS_EI();
 }
 
 void OS_Signal(int s)
@@ -169,6 +170,7 @@ void OS_Signal(int s)
 
         semArr[s].procCount--;
     }
+	OS_EI();
 }
 
 void OS_Start(void)
