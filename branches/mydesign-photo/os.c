@@ -46,7 +46,7 @@ void idle ( void )
 {
     while ( TRUE )
     {
-        serial_print("IIIIII\n");
+//      serial_print("IIIIII\n"); /* just for debugging purposes */
     }
 }
 

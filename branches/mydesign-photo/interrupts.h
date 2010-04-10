@@ -15,8 +15,8 @@ typedef void (*interrupt_t) (void);
 #define IC1V    *(interrupt_t *)(VECTOR_BASE + 0x2E) /* IC1 */
 #define RTIV    *(interrupt_t *)(VECTOR_BASE + 0x30) /* RTI */
 #define SWIV    *(interrupt_t *)(VECTOR_BASE + 0x36) /* SWI */
-//#define RESETV  *(interrupt_t *) (VECTOR_BASE + 0x3E))
-#define RESETV	(*(volatile int *)(0xBFC0 + 0x3E))
+#define RESETV  *(interrupt_t *) (VECTOR_BASE + 0x3E))
+//#define RESETV	(*(volatile int *)(0xBFC0 + 0x3E))
 
 /* source: http://www.catonmat.net/blog/bit-hacks-header-file/ */
 /* set n-th bit in x */
