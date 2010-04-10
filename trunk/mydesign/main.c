@@ -7,6 +7,22 @@
 
 void serial_print (char *msg);
 static inline void serial_send (char c);
+void beep(int value);
+
+void beep(int value)
+{
+	int j;
+	char i, k;
+	for (j = 0; j < 255; ++j)
+	{
+		B_SET(_io_ports[M6811_PORTA], 3);
+		for (k = 0; k < value; ++k)
+			for ( i = 1 ; i != 0; ++i );
+		B_UNSET(_io_ports[M6811_PORTA], 3);
+		for (k = 0; k < value; ++k)
+			for ( i = 1 ; i != 0; ++i );
+	}
+}
 
 void spo1sem()
 {
@@ -57,7 +73,7 @@ void producer1()
 {
     FIFO f = (FIFO)OS_GetParam();
     int j;
-    int arr[8] = {0, 0, 1, 1, 1, 1, 0, 4};
+    int arr[8] = {0, 1, 2, 3, 0, 1, 2, 3};
     while ( TRUE )
     {
 //      OS_Wait(13);
@@ -150,22 +166,23 @@ void consumer()
         if ( OS_Read(f, &value) )
         {
 //          OS_Wait(14);
+			beep(value);
             switch ( value )
             {
             case 0:
-                serial_print("0 ");
+				sys_print_lcd("0 \0");
                 break;
             case 1:
-                serial_print("1 ");
+                sys_print_lcd("1 \0");
                 break;
             case 2:
-                serial_print("2 ");
+                sys_print_lcd("2 \0");
                 break;
             case 3:
-                serial_print("3 ");
+                sys_print_lcd("3 \0");
                 break;
             case 4:
-                serial_print("\n ");
+                sys_print_lcd("4 \0");
                 break;
             default:
                 break;
@@ -276,7 +293,7 @@ void _Reset () {
 
     unsigned int i;
 
-    sys_print_lcd("SemOSXtreme!\0");
+    sys_print_lcd("SemOSXTreme3!\0");
     for ( i = 1; i != 0; i++ );
 
     OS_Init();
@@ -296,12 +313,12 @@ void _Reset () {
     PPPMax[1]   = 1;
 //  PPPMax[2]   = 1;
     PPPLen      = 2;
-    OS_Create(spo1sem, f, SPORADIC, 1);
-    OS_Create(spo2sem, f, SPORADIC, 1);
-    OS_Create(spo3sem, f, SPORADIC, 1);
-    OS_Create(spo4sem, f, SPORADIC, 1);
+    //OS_Create(spo1sem, f, SPORADIC, 1);
+    //OS_Create(spo2sem, f, SPORADIC, 1);
+    //OS_Create(spo3sem, f, SPORADIC, 1);
+    //OS_Create(spo4sem, f, SPORADIC, 1);
 
-    OS_Create(consumer, f, DEVICE, 5);
+    OS_Create(consumer, f, DEVICE, 2);
     OS_Create(producer1, f, SPORADIC, 5);
 //  OS_Create(producer2, f, SPORADIC, 5);
 
