@@ -1,5 +1,6 @@
 #include "ports.h"
 #include "os.h"
+#include "interrupts.h"
 
 #define EMPTYCOUNT      15;
 #define FILLCOUNT       14;
@@ -56,14 +57,14 @@ void producer1()
 {
     FIFO f = (FIFO)OS_GetParam();
     int j;
-    int arr[8] = {0, 0, 1, 1, 1, 1, 0, 0};
+    int arr[8] = {0, 0, 1, 1, 1, 1, 0, 4};
     while ( TRUE )
     {
 //      OS_Wait(13);
         for ( j = 0; j < FIFOSIZE; ++j ) {
             OS_Wait(15);
             OS_Write(f, arr[j]);
-            OS_Signal(14);
+//          OS_Signal(14);
         }
 //      OS_Signal(13);
         OS_Yield();
@@ -76,16 +77,16 @@ void producer2()
 {
     FIFO f = (FIFO)OS_GetParam();              
     int j;                                     
-    int arr[8] = {0, 0, 2, 2, 2, 2, 0, 0};     
+    int arr[8] = {0, 0, 2, 2, 2, 2, 0, 4};     
     while ( TRUE )                             
     {                                          
-        OS_Wait(13);
+//      OS_Wait(13);
         for ( j = 0; j < FIFOSIZE; ++j ) {     
-            OS_Wait(15);                       
+            OS_Wait(15);
             OS_Write(f, arr[j]);               
-            OS_Signal(14);                     
+            OS_Signal(14);
         }                                      
-        OS_Signal(13);
+//      OS_Signal(13);
         OS_Yield();
     }                                          
     // write the value                         
@@ -101,7 +102,7 @@ void consumer()
 //      OS_Wait(13);
         if ( OS_Read(f, &value) )
         {
-            OS_Wait(14);
+//          OS_Wait(14);
             switch ( value )
             {
             case 0:
@@ -117,7 +118,7 @@ void consumer()
                 serial_print("3 ");
                 break;
             case 4:
-                serial_print("4 ");
+                serial_print("\n ");
                 break;
             default:
                 break;
@@ -223,9 +224,9 @@ int main (int argc, char *argv[])
 //  OS_Create(spo3sem, f, SPORADIC, 1);
 //  OS_Create(spo4sem, f, SPORADIC, 1);
 
-    OS_Create(consumer, f, DEVICE, 2);
-//  OS_Create(producer1, f, SPORADIC, 2);
-    OS_Create(producer2, f, SPORADIC, 2);
+    OS_Create(consumer, f, DEVICE, 5);
+    OS_Create(producer1, f, SPORADIC, 5);
+//  OS_Create(producer2, f, SPORADIC, 5);
 
     OS_Start();
 
