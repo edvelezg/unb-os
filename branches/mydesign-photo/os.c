@@ -137,7 +137,7 @@ void OS_Wait(int s)
 
         OS_Yield();
     }
-	OS_EI();
+//  OS_EI();
 }
 
 void OS_Signal(int s)

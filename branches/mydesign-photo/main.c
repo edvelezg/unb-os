@@ -1,5 +1,6 @@
 #include "ports.h"
 #include "os.h"
+#include "interrupts.h"
 
 #define EMPTYCOUNT      15;
 #define FILLCOUNT       14;
@@ -56,14 +57,14 @@ void producer1()
 {
     FIFO f = (FIFO)OS_GetParam();
     int j;
-    int arr[8] = {0, 0, 1, 1, 1, 1, 0, 0};
+    int arr[8] = {0, 0, 1, 1, 1, 1, 0, 4};
     while ( TRUE )
     {
 //      OS_Wait(13);
         for ( j = 0; j < FIFOSIZE; ++j ) {
             OS_Wait(15);
             OS_Write(f, arr[j]);
-            OS_Signal(14);
+//          OS_Signal(14);
         }
 //      OS_Signal(13);
         OS_Yield();
@@ -76,16 +77,16 @@ void producer2()
 {
     FIFO f = (FIFO)OS_GetParam();              
     int j;                                     
-    int arr[8] = {4, 4, 2, 2, 2, 2, 4, 4};     
+    int arr[8] = {0, 0, 2, 2, 2, 2, 0, 4};     
     while ( TRUE )                             
     {                                          
-        OS_Wait(13);
+//      OS_Wait(13);
         for ( j = 0; j < FIFOSIZE; ++j ) {     
-            OS_Wait(15);                       
+            OS_Wait(15);
             OS_Write(f, arr[j]);               
-            OS_Signal(14);                     
+            OS_Signal(14);
         }                                      
-        OS_Signal(13);
+//      OS_Signal(13);
         OS_Yield();
     }                                          
     // write the value                         
@@ -96,51 +97,31 @@ void consumer()
 {
     FIFO f = (FIFO)OS_GetParam();
     int j, value;
-	char i;    
     while ( TRUE )
     {
 //      OS_Wait(13);
         if ( OS_Read(f, &value) )
         {
-            OS_Wait(14);
+//          OS_Wait(14);
             switch ( value )
             {
-				case 0:
-					for (j = 0; j < 200; ++j)
-					{
-						B_SET(_io_ports[M6811_PORTA], 3);
-						for ( i = 1 ; i != 0; ++i );
-						B_UNSET(_io_ports[M6811_PORTA], 3);
-						for ( i = 1 ; i != 0; ++i );
-						break;
-					}
-				case 1:
-					for (j = 0; j < 200; ++j)
-					{
-						B_SET(_io_ports[M6811_PORTA], 3);
-						for ( i = 1 ; i != 0; ++i );
-						B_UNSET(_io_ports[M6811_PORTA], 3);
-						for ( i = 1 ; i != 0; ++i );
-						break;
-					}
-				case 2:
-					for (j = 0; j < 200; ++j)
-					{
-						B_SET(_io_ports[M6811_PORTA], 3);
-						for ( i = 1 ; i != 0; ++i );
-						B_UNSET(_io_ports[M6811_PORTA], 3);
-						for ( i = 1 ; i != 0; ++i );
-						break;
-					}
-				case 3:
-					sys_print_lcd("3 ");						
-					break;
-				case 4:
-					sys_print_lcd("4 ");
-					break;
-				default:
-					break;
-				
+            case 0:
+                serial_print("0 ");
+                break;
+            case 1:
+                serial_print("1 ");
+                break;
+            case 2:
+                serial_print("2 ");
+                break;
+            case 3:
+                serial_print("3 ");
+                break;
+            case 4:
+                serial_print("\n ");
+                break;
+            default:
+                break;
             }
             OS_Signal(15); 
         }
@@ -238,14 +219,14 @@ int main (int argc, char *argv[])
     PPPMax[1]   = 1;
 //  PPPMax[2]   = 1;
     PPPLen      = 2;
-//  OS_Create(spo1sem, f, SPORADIC, 1);
-//  OS_Create(spo2sem, f, SPORADIC, 1);
-//  OS_Create(spo3sem, f, SPORADIC, 1);
-//  OS_Create(spo4sem, f, SPORADIC, 1);
+    OS_Create(spo1sem, f, SPORADIC, 1);
+    OS_Create(spo2sem, f, SPORADIC, 1);
+    OS_Create(spo3sem, f, SPORADIC, 1);
+    OS_Create(spo4sem, f, SPORADIC, 1);
 
-    OS_Create(consumer, f, DEVICE, 2);
-//  OS_Create(producer1, f, SPORADIC, 2);
-    OS_Create(producer2, f, SPORADIC, 2);
+    OS_Create(consumer, f, DEVICE, 5);
+    OS_Create(producer1, f, SPORADIC, 5);
+//  OS_Create(producer2, f, SPORADIC, 5);
 
     OS_Start();
 
