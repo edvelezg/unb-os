@@ -24,6 +24,20 @@ void beep(int value)
 	}
 }
 
+void spo0()
+{
+    FIFO f = (FIFO)OS_GetParam();
+    int j;
+    int arr[8] = {1, 2, 3, 4, 4, 3, 2, 1};
+    for ( j = 0; j < FIFOSIZE; ++j )
+    {
+        OS_Wait(15);
+        OS_Write(f, arr[j]);
+        //OS_Signal(14);
+    }
+    OS_Terminate();
+}
+
 void spo1()
 {
     FIFO f = (FIFO)OS_GetParam();
@@ -70,6 +84,10 @@ void producer1()
 {
 
     FIFO f = (FIFO)OS_GetParam();
+
+	OS_Wait(1);
+    OS_Create(spo0, f, SPORADIC, 1);
+
     while ( TRUE )
     {
         OS_Wait(1);
@@ -122,35 +140,35 @@ void consumer()
             {
             case 0:
 				beep(value + 1);
-				sys_print_lcd("0 \0");
+				//sys_print_lcd("0 \0");
 				break;
             case 1:
                 beep(value + 1);
-				sys_print_lcd("1 \0");
+				//sys_print_lcd("1 \0");
                 break;
             case 2:
                 beep(value + 1);
-				sys_print_lcd("2 \0");
+				//sys_print_lcd("2 \0");
                 break;
             case 3:
                 beep(value + 1);
-				sys_print_lcd("3 \0");
+				//sys_print_lcd("3 \0");
                 break;
             case 4:
                 beep(value + 1);
-				sys_print_lcd("4 \0");
+				//sys_print_lcd("4 \0");
                 break;
             case 5:
                 beep(value + 1);
-				sys_print_lcd("5 \0");
+				//sys_print_lcd("5 \0");
                 break;
             case 6:
                 beep(value + 1);
-				sys_print_lcd("6 \0");
+				//sys_print_lcd("6 \0");
                 break;
             case 7:
                 beep(value + 1);
-				sys_print_lcd("7 \0");
+				//sys_print_lcd("7 \0");
                 break;
             default:
                 break;
@@ -211,40 +229,40 @@ void dev2()
     }
 }
 
-void beepToDarkness( int value )
-{
-
-    while ( value >= 150 )
-    {
-		int i;
-		for ( i = 1 ; i != 0; ++i );
-        if ( value >= 150 && value < 190 )
-        {
-            beep(5);
-			sys_print_lcd("5 \0");
-        }
-        else if ( value >= 190 && value < 220 )
-        {
-            beep(4);
-			sys_print_lcd("4 \0");
-        }
-        else if ( value >= 220 && value < 230 )
-        {
-            beep(3);
-			sys_print_lcd("3 \0");
-        }
-        else if ( value >= 220 && value < 230 )
-        {
-            beep(2);
-			sys_print_lcd("2 \0");
-        }
-        else if ( value >= 230 )
-        {
-            beep(1);
-			sys_print_lcd("1 \0");
-        }
-    }
-}
+//void beepToDarkness( int value )
+//{
+//
+//    while ( value >= 150 )
+//    {
+//		int i;
+//		for ( i = 1 ; i != 0; ++i );
+//        if ( value >= 150 && value < 190 )
+//        {
+//            beep(5);
+//			sys_print_lcd("5 \0");
+//        }
+//        else if ( value >= 190 && value < 220 )
+//        {
+//            beep(4);
+//			sys_print_lcd("4 \0");
+//        }
+//        else if ( value >= 220 && value < 230 )
+//        {
+//            beep(3);
+//			sys_print_lcd("3 \0");
+//        }
+//        else if ( value >= 220 && value < 230 )
+//        {
+//            beep(2);
+//			sys_print_lcd("2 \0");
+//        }
+//        else if ( value >= 230 )
+//        {
+//            beep(1);
+//			sys_print_lcd("1 \0");
+//        }
+//    }
+//}
 
 void senseLight()
 {
@@ -274,14 +292,14 @@ void senseLight()
 			{
 			}
 		}
-
-		lightValue = _io_ports[ADR1];
-		printVal = lightValue;
 		
 		if (lightValue >= 150)
 		{
-			beepToDarkness(lightValue);
+			beep(5);
 		}
+		
+		lightValue = _io_ports[ADR1];
+		printVal = lightValue;
 
 		a[2] = (printVal%10) + '0';
 		printVal /= 10;
@@ -337,7 +355,7 @@ void _Reset () {
     //OS_Create(spo1sem, f, SPORADIC, 1);
     //OS_Create(spo2sem, f, SPORADIC, 1);
     //OS_Create(spo4sem, 0, SPORADIC, 1);
-    OS_Create(per2, f, PERIODIC, 'A');
+    OS_Create(perA, f, PERIODIC, 'A');
     OS_Create(consumer, f, DEVICE, 5);
     OS_Create(senseLight, f, DEVICE, 2);
     OS_Create(producer1, f, SPORADIC, 5);
