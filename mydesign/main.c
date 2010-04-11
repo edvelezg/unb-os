@@ -73,12 +73,12 @@ void spo1()
 {
     FIFO f = (FIFO)OS_GetParam();
     int j;
-    int arr[8] = {0, 1, 2, 3, 3, 2, 1, 0};
+    int arr[8] = {0, 1, 2, 3, 4, 5, 6, 7};
     for ( j = 0; j < FIFOSIZE; ++j )
     {
         OS_Wait(15);
         OS_Write(f, arr[j]);
-        OS_Signal(14);
+        //OS_Signal(14);
     }
 //  OS_Signal(13);
     OS_Terminate();
@@ -88,12 +88,27 @@ void spo2()
 {
     FIFO f = (FIFO)OS_GetParam();
     int j;
-    int arr[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+    int arr[8] = {7, 6, 5, 4, 3, 2, 1, 0};
     for ( j = 0; j < FIFOSIZE; ++j )
     {
         OS_Wait(15);
         OS_Write(f, arr[j]);
-        OS_Signal(14);
+        //OS_Signal(14);
+    }
+//  OS_Signal(13);
+    OS_Terminate();
+}
+
+void spo3()
+{
+    FIFO f = (FIFO)OS_GetParam();
+    int j;
+    int arr[8] = {1, 6, 1, 6, 1, 6, 1, 6};
+    for ( j = 0; j < FIFOSIZE; ++j )
+    {
+        OS_Wait(15);
+        OS_Write(f, arr[j]);
+        //OS_Signal(14);
     }
 //  OS_Signal(13);
     OS_Terminate();
@@ -111,8 +126,8 @@ void producer1()
         OS_Wait(1);
         OS_Create(spo2, f, SPORADIC, 1);
 
-        //OS_Wait(1);
-        //OS_Create(spo3, f, SPORADIC, 1);
+        OS_Wait(1);
+        OS_Create(spo3, f, SPORADIC, 1);
     }
 //      OS_Terminate();
 }
@@ -211,9 +226,9 @@ void consumer()
             default:
                 break;
             }
-			for ( j = 1 ; j != 250; ++j );
+			for ( j = 1 ; j < 125; ++j );
             OS_Signal(15); 
-			OS_Yield();
+			//OS_Yield();
         }
         OS_Signal(1);
         OS_Yield();
@@ -268,34 +283,85 @@ void dev2()
     }
 }
 
+void beepToDarkness( int value )
+{
+
+    while ( value >= 150 )
+    {
+		int i;
+		for ( i = 1 ; i != 0; ++i );
+        if ( value >= 150 && value < 190 )
+        {
+            beep(5);
+			sys_print_lcd("5 \0");
+        }
+        else if ( value >= 190 && value < 220 )
+        {
+            beep(4);
+			sys_print_lcd("4 \0");
+        }
+        else if ( value >= 220 && value < 230 )
+        {
+            beep(3);
+			sys_print_lcd("3 \0");
+        }
+        else if ( value >= 220 && value < 230 )
+        {
+            beep(2);
+			sys_print_lcd("2 \0");
+        }
+        else if ( value >= 230 )
+        {
+            beep(1);
+			sys_print_lcd("1 \0");
+        }
+    }
+}
+
 void senseLight()
 {
 	char *a = "-------\0";
-	int i;
-	int lightValue;
+	int printVal;
+	char lightValue = 30;
 	while (TRUE)
 	{
 		B_SET(_io_ports[OPTION], 7); // switch port e to analog mode
-		OS_Yield();
+		if ( lightValue < 150 )
+		{
+			OS_Yield();
+		}
+		else
+		{
+		}
 	
 		_io_ports[ADCTL] = 0; // right photocell is pin 0, so you set it to 0.
 
-		while (!(_io_ports[ADCTL] & 128)) // waits bit 7 to light up
+		while (!(_io_ports[ADCTL] & 128)) // waits for bit 7 to light up
 		{	
-			OS_Yield();
+			if ( lightValue < 150 )
+			{
+				OS_Yield();
+			}
+			else
+			{
+			}
 		}
 
 		lightValue = _io_ports[ADR1];
-		a[2] = lightValue%10 + '0';
-		lightValue /= 10;
-		a[1] = (lightValue)%10 + '0';
-		lightValue /= 10;
-		a[0] = (lightValue)%10 + '0';
+		printVal = lightValue;
+		
+		if (lightValue >= 150)
+		{
+			beepToDarkness(lightValue);
+		}
 
+		a[2] = (printVal%10) + '0';
+		printVal /= 10;
+		a[1] = (printVal%10) + '0';
+		printVal /= 10;
+		a[0] = (printVal%10) + '0';
 		sys_print_lcd(a);
-		//OS_Yield();
 	}
-
 }
 
 static inline void serial_send (char c)
@@ -320,7 +386,7 @@ void _Reset () {
 
     unsigned int i;
 
-    sys_print_lcd("SemOSXTreme4!\0");
+    sys_print_lcd("SuperSemOSXTrEme4!\0");
     for ( i = 1; i != 0; i++ );
 
     OS_Init();
@@ -346,7 +412,7 @@ void _Reset () {
     /*OS_Create(per2, f, PERIODIC, 'A');*/
 
     OS_Create(consumer, f, DEVICE, 5);
-    //OS_Create(senseLight, f, DEVICE, 2);
+    OS_Create(senseLight, f, DEVICE, 2);
     OS_Create(producer1, f, SPORADIC, 5);
 //  OS_Create(producer2, f, SPORADIC, 5);
 
