@@ -46,10 +46,7 @@ void spo4sem()
 {
     while ( TRUE )
     {
-        OS_Wait(1);
         serial_print ("444444\n");
-        OS_Signal(1);
-        OS_Yield();
     }
 }
 
@@ -57,7 +54,7 @@ void spo1()
 {
     FIFO f = (FIFO)OS_GetParam();
     int j;
-    int arr[8] = {0, 1, 2, 3, 3, 2, 1, 8};
+	int arr[8] = {1, 1, 1, 1, 1, 1, 1, 8};
     for ( j = 0; j < FIFOSIZE; ++j )
     {
         OS_Wait(15);
@@ -72,7 +69,7 @@ void spo2()
 {
     FIFO f = (FIFO)OS_GetParam();
     int j;
-    int arr[8] = {0, 1, 2, 3, 4, 5, 6, 8};
+    int arr[8] = {2, 2, 2, 2, 2, 2, 2, 8};
     for ( j = 0; j < FIFOSIZE; ++j )
     {
         OS_Wait(15);
@@ -88,7 +85,7 @@ void spo3()
 {
     FIFO f = (FIFO)OS_GetParam();
     int j;
-    int arr[8] = {0, 6, 0, 6, 0, 6, 0, 8};
+    int arr[8] = {3, 3, 3, 3, 3, 3, 3, 8};
     for ( j = 0; j < FIFOSIZE; ++j )
     {
         OS_Wait(15);
@@ -117,34 +114,12 @@ void producer1()
 //      OS_Terminate();
 }
 
-void producer2()
-{
-    FIFO f = (FIFO)OS_GetParam();              
-    int j;                                     
-    int arr[8] = {0, 0, 2, 2, 2, 2, 0, 4};     
-    while ( TRUE )
-    {
-//      OS_Wait(13);
-        for ( j = 0; j < FIFOSIZE; ++j )
-        {
-            OS_Wait(15);
-            OS_Write(f, arr[j]);               
-//          OS_Signal(14);
-        }                                      
-//      OS_Signal(13);
-        OS_Yield();
-    }                                          
-    // write the value                         
-    OS_Terminate();                                    
-}
-
 void consumer()
 {
     FIFO f = (FIFO)OS_GetParam();
     int j, value;
     while ( TRUE )
     {
-//      OS_Wait(13);
         while ( OS_Read(f, &value) )
         {
             OS_Wait(14);
@@ -178,7 +153,11 @@ void consumer()
                 serial_print("\n ");
                 break;
             }
+			for ( j = 1 ; j != 128; ++j );
+			for ( j = 1 ; j != 128; ++j );
+			for ( j = 1 ; j != 128; ++j );
             OS_Signal(15);
+			OS_Yield();
         }
 //      OS_Signal(13);
         OS_Signal(1);
@@ -270,17 +249,17 @@ int main (int argc, char *argv[])
     // write the value
     PPP[0]      = IDLE;
     PPP[1]      = IDLE;
-//  PPP[2]      = IDLE;
+	PPP[2]      = 'A';
     PPPMax[0]   = 1;
     PPPMax[1]   = 1;
-//  PPPMax[2]   = 1;
-    PPPLen      = 2;
-    OS_Create(spo1sem, f, SPORADIC, 1);
-    OS_Create(spo2sem, f, SPORADIC, 1);
-    OS_Create(spo3sem, f, SPORADIC, 1);
-    OS_Create(spo4sem, f, SPORADIC, 1);
+	PPPMax[2]   = 1;
+    PPPLen      = 3;
+    //OS_Create(spo1sem, f, SPORADIC, 1);
+    //OS_Create(spo2sem, f, SPORADIC, 1);
+    //OS_Create(spo3sem, f, SPORADIC, 1);
+    //OS_Create(spo4sem, f, PERIODIC, 'A');
 
-    OS_Create(consumer, f, DEVICE, 5);
+    OS_Create(consumer, f, DEVICE, 2);
     OS_Create(producer1, f, SPORADIC, 5);
 //  OS_Create(producer2, f, SPORADIC, 5);
 
