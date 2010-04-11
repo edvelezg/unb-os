@@ -53,24 +53,68 @@ void spo4sem()
     }
 }
 
-void producer1()
+void spo1()
 {
     FIFO f = (FIFO)OS_GetParam();
     int j;
-    int arr[8] = {0, 0, 1, 1, 1, 1, 0, 4};
+    int arr[8] = {0, 1, 2, 3, 3, 2, 1, 8};
+    for ( j = 0; j < FIFOSIZE; ++j )
+    {
+        OS_Wait(15);
+        OS_Write(f, arr[j]);
+        OS_Signal(14);
+    }
+//  OS_Signal(13);
+    OS_Terminate();
+}
+
+void spo2()
+{
+    FIFO f = (FIFO)OS_GetParam();
+    int j;
+    int arr[8] = {0, 1, 2, 3, 4, 5, 6, 8};
+    for ( j = 0; j < FIFOSIZE; ++j )
+    {
+        OS_Wait(15);
+        OS_Write(f, arr[j]);
+        OS_Signal(14);
+    }
+//  OS_Signal(13);
+    OS_Terminate();
+}
+
+
+void spo3()
+{
+    FIFO f = (FIFO)OS_GetParam();
+    int j;
+    int arr[8] = {0, 6, 0, 6, 0, 6, 0, 8};
+    for ( j = 0; j < FIFOSIZE; ++j )
+    {
+        OS_Wait(15);
+        OS_Write(f, arr[j]);
+        OS_Signal(14);
+    }
+//  OS_Signal(13);
+    OS_Terminate();
+}
+
+void producer1()
+{
+
+    FIFO f = (FIFO)OS_GetParam();
     while ( TRUE )
     {
-//      OS_Wait(13);
-        for ( j = 0; j < FIFOSIZE; ++j ) {
-            OS_Wait(15);
-            OS_Write(f, arr[j]);
-//          OS_Signal(14);
-        }
-//      OS_Signal(13);
-        OS_Yield();
+        OS_Wait(1);
+        OS_Create(spo1, f, SPORADIC, 1);
+
+        OS_Wait(1);
+        OS_Create(spo2, f, SPORADIC, 1);
+
+        OS_Wait(1);
+        OS_Create(spo3, f, SPORADIC, 1);
     }
-    // write the value
-    OS_Terminate();
+//      OS_Terminate();
 }
 
 void producer2()
@@ -78,13 +122,14 @@ void producer2()
     FIFO f = (FIFO)OS_GetParam();              
     int j;                                     
     int arr[8] = {0, 0, 2, 2, 2, 2, 0, 4};     
-    while ( TRUE )                             
-    {                                          
+    while ( TRUE )
+    {
 //      OS_Wait(13);
-        for ( j = 0; j < FIFOSIZE; ++j ) {     
+        for ( j = 0; j < FIFOSIZE; ++j )
+        {
             OS_Wait(15);
             OS_Write(f, arr[j]);               
-            OS_Signal(14);
+//          OS_Signal(14);
         }                                      
 //      OS_Signal(13);
         OS_Yield();
@@ -100,9 +145,9 @@ void consumer()
     while ( TRUE )
     {
 //      OS_Wait(13);
-        if ( OS_Read(f, &value) )
+        while ( OS_Read(f, &value) )
         {
-//          OS_Wait(14);
+            OS_Wait(14);
             switch ( value )
             {
             case 0:
@@ -118,14 +163,25 @@ void consumer()
                 serial_print("3 ");
                 break;
             case 4:
-                serial_print("\n ");
+                serial_print("4 ");
+                break;
+            case 5:
+                serial_print("5 ");
+                break;
+            case 6:
+                serial_print("6 ");
+                break;
+            case 7:
+                serial_print("7 ");
                 break;
             default:
+                serial_print("\n ");
                 break;
             }
-            OS_Signal(15); 
+            OS_Signal(15);
         }
 //      OS_Signal(13);
+        OS_Signal(1);
         OS_Yield();
     }
 //  OS_Terminate();
