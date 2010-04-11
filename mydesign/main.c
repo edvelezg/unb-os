@@ -62,31 +62,59 @@ void spo4sem()
 {
     while ( TRUE )
     {
-        //OS_Wait(1);
+        OS_Wait(1);
         sys_print_lcd("444444\0");
-        //OS_Signal(1);
+        OS_Signal(1);
         //OS_Yield();
     }
 }
 
-void producer1()
+void spo1()
 {
     FIFO f = (FIFO)OS_GetParam();
     int j;
     int arr[8] = {0, 1, 2, 3, 3, 2, 1, 0};
+    for ( j = 0; j < FIFOSIZE; ++j )
+    {
+        OS_Wait(15);
+        OS_Write(f, arr[j]);
+        OS_Signal(14);
+    }
+//  OS_Signal(13);
+    OS_Terminate();
+}
+
+void spo2()
+{
+    FIFO f = (FIFO)OS_GetParam();
+    int j;
+    int arr[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+    for ( j = 0; j < FIFOSIZE; ++j )
+    {
+        OS_Wait(15);
+        OS_Write(f, arr[j]);
+        OS_Signal(14);
+    }
+//  OS_Signal(13);
+    OS_Terminate();
+}
+
+void producer1()
+{
+
+    FIFO f = (FIFO)OS_GetParam();
     while ( TRUE )
     {
-//      OS_Wait(13);
-        for ( j = 0; j < FIFOSIZE; ++j ) {
-            OS_Wait(15);
-            OS_Write(f, arr[j]);
-//          OS_Signal(14);
-        }
-//      OS_Signal(13);
-        OS_Yield();
+        OS_Wait(1);
+        OS_Create(spo1, f, SPORADIC, 1);
+
+        OS_Wait(1);
+        OS_Create(spo2, f, SPORADIC, 1);
+
+        //OS_Wait(1);
+        //OS_Create(spo3, f, SPORADIC, 1);
     }
-    // write the value
-    OS_Terminate();
+//      OS_Terminate();
 }
 
 void per1()
@@ -136,26 +164,6 @@ void per2()
     OS_Terminate();
 }
 
-void producer2()
-{
-    FIFO f = (FIFO)OS_GetParam();              
-    int j;                                     
-    int arr[8] = {0, 0, 2, 2, 2, 2, 0, 4};     
-    while ( TRUE )                             
-    {                                          
-//      OS_Wait(13);
-        for ( j = 0; j < FIFOSIZE; ++j ) {     
-            OS_Wait(15);
-            OS_Write(f, arr[j]);               
-            OS_Signal(14);
-        }                                      
-//      OS_Signal(13);
-        OS_Yield();
-    }                                          
-    // write the value                         
-    OS_Terminate();                                    
-}
-
 void consumer()
 {
     FIFO f = (FIFO)OS_GetParam();
@@ -163,33 +171,51 @@ void consumer()
     while ( TRUE )
     {
 //      OS_Wait(13);
-        if ( OS_Read(f, &value) )
+        while ( OS_Read(f, &value) )
         {
-//          OS_Wait(14);
-			beep(value + 1);
+			//OS_Wait(14);
             switch ( value )
             {
             case 0:
+				beep(value + 1);
 				sys_print_lcd("0 \0");
-                break;
+				break;
             case 1:
-                sys_print_lcd("1 \0");
+                beep(value + 1);
+				sys_print_lcd("1 \0");
                 break;
             case 2:
-                sys_print_lcd("2 \0");
+                beep(value + 1);
+				sys_print_lcd("2 \0");
                 break;
             case 3:
-                sys_print_lcd("3 \0");
+                beep(value + 1);
+				sys_print_lcd("3 \0");
                 break;
             case 4:
-                sys_print_lcd("4 \0");
+                beep(value + 1);
+				sys_print_lcd("4 \0");
+                break;
+            case 5:
+                beep(value + 1);
+				sys_print_lcd("5 \0");
+                break;
+            case 6:
+                beep(value + 1);
+				sys_print_lcd("6 \0");
+                break;
+            case 7:
+                beep(value + 1);
+				sys_print_lcd("7 \0");
                 break;
             default:
                 break;
             }
+			for ( j = 1 ; j != 250; ++j );
             OS_Signal(15); 
+			OS_Yield();
         }
-//      OS_Signal(13);
+        OS_Signal(1);
         OS_Yield();
     }
 //  OS_Terminate();
@@ -309,18 +335,18 @@ void _Reset () {
     // write the value
     PPP[0]      = IDLE;
     PPP[1]      = IDLE;
-	PPP[2]      = 'A';
+	//PPP[2]      = 'A';
     PPPMax[0]   = 1;
     PPPMax[1]   = 1;
-	PPPMax[2]   = 1;
-    PPPLen      = 3;
+	//PPPMax[2]   = 1;
+    PPPLen      = 2;
     //OS_Create(spo1sem, f, SPORADIC, 1);
     //OS_Create(spo2sem, f, SPORADIC, 1);
-    //OS_Create(spo3sem, f, SPORADIC, 1);
-    OS_Create(per2, f, PERIODIC, 'A');
+    //OS_Create(spo4sem, 0, SPORADIC, 1);
+    /*OS_Create(per2, f, PERIODIC, 'A');*/
 
-    OS_Create(consumer, f, DEVICE, 2);
-    OS_Create(senseLight, f, DEVICE, 2);
+    OS_Create(consumer, f, DEVICE, 5);
+    //OS_Create(senseLight, f, DEVICE, 2);
     OS_Create(producer1, f, SPORADIC, 5);
 //  OS_Create(producer2, f, SPORADIC, 5);
 
