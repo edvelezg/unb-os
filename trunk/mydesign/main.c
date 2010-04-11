@@ -24,51 +24,6 @@ void beep(int value)
 	}
 }
 
-void spo1sem()
-{
-    while ( TRUE )
-    {
-        OS_Wait(1);
-        sys_print_lcd("111111\0");
-        OS_Signal(1);
-        OS_Yield();
-    }
-}
-
-void spo2sem()
-{
-    while ( TRUE )
-    {
-        OS_Wait(1);
-        sys_print_lcd("222222\0");
-        OS_Signal(1);
-        OS_Yield();
-    }
-}
-
-
-void spo3sem()
-{
-    while ( TRUE )
-    {
-        OS_Wait(1);
-        sys_print_lcd("333333\0");
-        OS_Signal(1);
-        OS_Yield();
-    }
-}
-
-void spo4sem()
-{
-    while ( TRUE )
-    {
-        OS_Wait(1);
-        sys_print_lcd("444444\0");
-        OS_Signal(1);
-        //OS_Yield();
-    }
-}
-
 void spo1()
 {
     FIFO f = (FIFO)OS_GetParam();
@@ -80,7 +35,6 @@ void spo1()
         OS_Write(f, arr[j]);
         //OS_Signal(14);
     }
-//  OS_Signal(13);
     OS_Terminate();
 }
 
@@ -95,7 +49,6 @@ void spo2()
         OS_Write(f, arr[j]);
         //OS_Signal(14);
     }
-//  OS_Signal(13);
     OS_Terminate();
 }
 
@@ -110,7 +63,6 @@ void spo3()
         OS_Write(f, arr[j]);
         //OS_Signal(14);
     }
-//  OS_Signal(13);
     OS_Terminate();
 }
 
@@ -129,30 +81,9 @@ void producer1()
         OS_Wait(1);
         OS_Create(spo3, f, SPORADIC, 1);
     }
-//      OS_Terminate();
 }
 
-void per1()
-{
-    int i;
-    unsigned int a = 0;
-    unsigned int b = 0;
-    char *str = "    \0";
-    while ( TRUE )
-    {
-        b = a;
-        str[2] = (b % 10) + '0';
-        b /= 10;
-        str[1] = (b % 10) + '0';
-        b /= 10;
-        str[0] = (b % 10) + '0';
-        sys_print_lcd(str);
-        ++a;
-    }
-    OS_Terminate();
-}
-
-void per2()
+void perA()
 {
     static int j = 0;
     unsigned int *myP;
@@ -161,7 +92,7 @@ void per2()
 
     myP = (unsigned int *)&_io_ports[TCNT];
 
-    while ( j <= 5 )
+    while ( TRUE )
     {
         i = *myP;
         str[5] = (i % 10) + '0';
@@ -176,7 +107,6 @@ void per2()
         sys_print_lcd (str);
         ++j;
     }
-    OS_Terminate();
 }
 
 void consumer()
@@ -185,7 +115,6 @@ void consumer()
     int j, value;
     while ( TRUE )
     {
-//      OS_Wait(13);
         while ( OS_Read(f, &value) )
         {
 			//OS_Wait(14);
@@ -233,10 +162,9 @@ void consumer()
         OS_Signal(1);
         OS_Yield();
     }
-//  OS_Terminate();
 }
 
-void dev3()
+void perB()
 {
 	char i;
     while ( TRUE )
@@ -401,16 +329,15 @@ void _Reset () {
     // write the value
     PPP[0]      = IDLE;
     PPP[1]      = IDLE;
-	//PPP[2]      = 'A';
+	PPP[2]      = 'A';
     PPPMax[0]   = 1;
     PPPMax[1]   = 1;
-	//PPPMax[2]   = 1;
-    PPPLen      = 2;
+	PPPMax[2]   = 1;
+    PPPLen      = 3;
     //OS_Create(spo1sem, f, SPORADIC, 1);
     //OS_Create(spo2sem, f, SPORADIC, 1);
     //OS_Create(spo4sem, 0, SPORADIC, 1);
-    /*OS_Create(per2, f, PERIODIC, 'A');*/
-
+    OS_Create(per2, f, PERIODIC, 'A');
     OS_Create(consumer, f, DEVICE, 5);
     OS_Create(senseLight, f, DEVICE, 2);
     OS_Create(producer1, f, SPORADIC, 5);
