@@ -188,20 +188,20 @@ void perB()
     while ( TRUE )
     {
 		_io_ports[M6811_DDRD] = 0xFF; /* it sets the data direction to output for port d for all the pins*/
-		B_SET(_io_ports[M6811_PORTD],4); /* it sets the data direction to output for port d for all the pins*/
-		B_SET(_io_ports[M6811_PORTD],5); /* it sets the data direction to output for port d for all the pins*/
-		//_io_ports[M6811_PORTD] = 0xFF; /* I want 4 and 5 */
+        _io_ports[M6811_PORTD] = 0xFF; /* I want 4 and 5 */
+//  	B_SET(_io_ports[M6811_PORTD],4); /* it sets the data direction to output for port d for all the pins*/
+//  	B_SET(_io_ports[M6811_PORTD],5); /* it sets the data direction to output for port d for all the pins*/
 		
 		/* Turns on right and left motors */
 		//B_SET(_io_ports[M6811_PORTA], 5);  // right
 		//B_SET(_io_ports[M6811_PORTA], 6);	// left
 		_io_ports[M6811_PORTA] = 0xFF; /* I want 4 and 5 */
+        B_SET(_io_ports[M6811_PORTA], 6);
+        B_SET(_io_ports[M6811_PORTA], 5);
 
 		for ( i = 1 ; i != 0; ++i );
-		for ( i = 1 ; i != 0; ++i );
-		for ( i = 1 ; i != 0; ++i );
-		//for ( i = 1 ; i != 0; ++i );
-		//for ( i = 1 ; i != 0; ++i );
+        for ( i = 1 ; i != 0; ++i );
+        for ( i = 1 ; i != 0; ++i );
 
 		B_UNSET(_io_ports[M6811_PORTA], 5);
 		B_UNSET(_io_ports[M6811_PORTA], 6);
@@ -355,7 +355,8 @@ void _Reset () {
     //OS_Create(spo1sem, f, SPORADIC, 1);
     //OS_Create(spo2sem, f, SPORADIC, 1);
     //OS_Create(spo4sem, 0, SPORADIC, 1);
-    OS_Create(perA, f, PERIODIC, 'A');
+    OS_Create(perA, 0, PERIODIC, 'A');
+    OS_Create(perB, 0, DEVICE, 5);
     OS_Create(consumer, f, DEVICE, 5);
     OS_Create(senseLight, f, DEVICE, 2);
     OS_Create(producer1, f, SPORADIC, 5);
