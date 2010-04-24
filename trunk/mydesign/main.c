@@ -54,7 +54,7 @@ void spo1()
 
 void spo2()
 {
-    FIFO f = (FIFO)OS_GetParam();
+    FIFO f     = (FIFO)OS_GetParam();
     int j;
     int arr[8] = {7, 6, 5, 4, 3, 2, 1, 0};
     for ( j = 0; j < FIFOSIZE; ++j )
